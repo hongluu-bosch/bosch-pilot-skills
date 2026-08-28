@@ -1,0 +1,39 @@
+
+#if (RBFS_DCOM_ModeSelector == RBFS_DCOM_ModeSelector_ON)
+use dataitem NVM_ID_DCOM_ModeSelector
+{
+	job interface { }
+	plant eol preserve;
+	writecycles = 1000;
+}
+#endif /* RBFS_DCOM_ModeSelector */
+
+
+#if (RBFS_DCOM_BaselineCounter == RBFS_DCOM_BaselineCounter_ON)
+use dataitem NVM_ID_DCOM_BaselineCounter
+{
+	job interface { }
+	plant eol preserve;
+	writecycles = 1000;
+}
+#endif /* RBFS_DCOM_BaselineCounter */
+
+
+#if (RBFS_DCOM_CalibrationConstant == RBFS_DCOM_CalibrationConstant_ON)
+use dataitem NVM_ID_DCOM_CalibrationConstant
+{
+	job interface { }
+	plant eol preserve;
+	writecycles = 1000;
+}
+#endif /* RBFS_DCOM_CalibrationConstant */
+
+
+#if (RBFS_DCOM_RegionCode == RBFS_DCOM_RegionCode_ON)
+use dataitem NVM_ID_DCOM_RegionCode
+{
+	job interface { }
+	plant eol preserve;
+	writecycles = 1000;
+}
+#endif /* RBFS_DCOM_RegionCode */

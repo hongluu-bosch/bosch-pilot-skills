@@ -1,0 +1,9 @@
+
+#if (<< fs_macro >> == << fs_macro >>_ON)
+use dataitem << nvm_id >>
+{
+	job interface { }
+	plant eol preserve;
+	writecycles = << writecycles >>;
+}
+#endif /* << fs_macro >> */

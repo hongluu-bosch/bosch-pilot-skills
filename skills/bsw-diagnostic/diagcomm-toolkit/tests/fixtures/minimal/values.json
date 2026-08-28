@@ -1,0 +1,35 @@
+{
+  "$schema": "diagcomm-toolkit/v2",
+  "_comment": "diagcomm-toolkit fixture (>= 1.13.0, v2 split). Sibling config.json holds paths + options. base_dir is relative to this file's parent (fixtures/minimal/), so dcom_root resolves to fixtures/minimal/dcom without any filesystem glob. product_type lives under project (a path selector); CAN_Channel stays a parameter despite reading like a selector.",
+  "project": {
+    "name": "diagcomm-toolkit-tests/minimal",
+    "product_type": "DPB"
+  },
+  "parameters": {
+    "CAN_Channel": 0,
+    "CAN_ID_Format": "11bit",
+    "Addressing_Method": "Normal",
+    "CAN_DLC": {
+      "rx_frame_type": "CANFD",
+      "tx_frame_type": "CANFD",
+      "rx_dl": 64,
+      "tx_dl": 64
+    },
+    "CAN_Functional_Request_ID": "0x7DF",
+    "CAN_Physical_Request_ID": "0x722",
+    "CAN_Response_ID": "0x7A2",
+    "N_As": 70,
+    "N_Ar": 70,
+    "N_Bs": 150,
+    "N_Br": 25,
+    "N_Cs": 100,
+    "N_Cr": 150,
+    "P2_Max": 50,
+    "P2_Star_Max": 5000,
+    "BS": 0,
+    "STmin": 20,
+    "PaddingByte": "0xAA",
+    "StrictDlcCheck": true,
+    "NRC78_Times": 10
+  }
+}

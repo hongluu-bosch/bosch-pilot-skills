@@ -1,0 +1,44 @@
+/* ------------------------------------------------------------------------ */
+/* RBFS_DCOM_ModeSelector                                                 */
+/* ------------------------------------------------------------------------ */
+/*DE|Feature Switch for DID $F18Ch - ModeSelector |*/
+#ifndef RBFS_DCOM_ModeSelector
+#define RBFS_DCOM_ModeSelector		RBFS_DCOM_ModeSelector_OFF
+#endif
+
+
+/* ------------------------------------------------------------------------ */
+/* RBFS_DCOM_BaselineCounter                                              */
+/* ------------------------------------------------------------------------ */
+/*DE|Feature Switch for DID $F190h - BaselineCounter |*/
+#ifndef RBFS_DCOM_BaselineCounter
+#define RBFS_DCOM_BaselineCounter		RBFS_DCOM_BaselineCounter_OFF
+#endif
+
+
+/* ------------------------------------------------------------------------ */
+/* RBFS_DCOM_LiveTemperature                                              */
+/* ------------------------------------------------------------------------ */
+/*DE|Feature Switch for DID $F1A0h - LiveTemperature |*/
+#ifndef RBFS_DCOM_LiveTemperature
+#define RBFS_DCOM_LiveTemperature		RBFS_DCOM_LiveTemperature_OFF
+#endif
+
+
+/* ------------------------------------------------------------------------ */
+/* RBFS_DCOM_CalibrationConstant                                          */
+/* ------------------------------------------------------------------------ */
+/*DE|Feature Switch for DID $F1A1h - CalibrationConstant |*/
+#ifndef RBFS_DCOM_CalibrationConstant
+#define RBFS_DCOM_CalibrationConstant		RBFS_DCOM_CalibrationConstant_OFF
+#endif
+
+
+/* ------------------------------------------------------------------------ */
+/* RBFS_DCOM_RegionCode                                                   */
+/* ------------------------------------------------------------------------ */
+/*DE|Feature Switch for DID $F1A2h - RegionCode |*/
+#ifndef RBFS_DCOM_RegionCode
+#define RBFS_DCOM_RegionCode		RBFS_DCOM_RegionCode_OFF
+#endif
+

@@ -1,0 +1,42 @@
+# Static Code Review Rules For Cline
+
+When the user asks to review code, validate findings, generate a report, save a report, assess severity, review the current file, or review a selected function or selected code block, automatically load and apply the project review method from these files before answering:
+
+1. static-code-review/skills/static-code-review-workflow/SKILL.md
+2. static-code-review/skills/static-code-review-workflow/guidelines/general_coding_rules.md
+3. static-code-review/skills/static-code-review-workflow/guidelines/arithmetic_coding_rules.md
+4. static-code-review/skills/static-code-review-workflow/references/report-templates.md
+5. static-code-review/skills/static-code-review-workflow/references/report-output.md
+
+Default behavior:
+
+1. Prefer the active source file in the editor as the review scope unless the user names another file. Do not treat generated files under `review-reports/` as the default source-review target.
+2. If the user explicitly asks to review the selected function, selected code, current selection, or a named function, limit the review scope to that function or selection.
+3. If the user asks to review the current file, ignore incidental editor selection and keep file scope unless the user explicitly asks for function-level review.
+4. If there is no editor selection but the user names a function, review only that named function in the active file when possible.
+5. When generating a formal report for a selected function or selection, keep the report scope constrained to that function or selection in both the rendered content and the saved report title.
+6. Run a dual-pass review workflow before final severity decisions:
+   - Pass A: Rule pass against project skill + guideline files.
+   - Pass B: Independent AI reasoning pass focused on behavior impact.
+   - Fusion pass: merge A and B, keep only code-proven findings, then decide final severity.
+7. If the user asks for a formal review of the active file, generate the formal report directly in chat, then write the formal HTML outputs directly under `review-reports/`. Do not route formal review through VS Code tasks or Kimi web automation.
+8. If the user asks for a formal function-level review, generate the formal report directly in chat for only that function, then write the formal HTML outputs directly under `review-reports/`. Do not infer function scope from incidental selection when the user asked for current-file review.
+9. Formal chat-triggered output must contain these sections in one response, in order: `Review Result`, `Markdown Report`, `English HTML Report`, `Chinese HTML Report`.
+10. When a formal report is requested, write both the English and Chinese HTML reports to `review-reports/`; do not stop after producing chat-only Markdown or a single English HTML file such as `*.file-review.latest.html`.
+11. During normal current-file or function review, never plan or execute a separate archive operation unless the user explicitly asks for it.
+12. Default formal report names use one fixed prefix plus a timestamp, for example:
+   - review-reports/static-code-review-report.current-file.<timestamp>.html
+   - review-reports/static-code-review-report.current-file.<timestamp>.zh-CN.html
+13. Keep confirmed findings selective and code-proven.
+14. If Open Questions or Suspected But Unconfirmed Issues are empty, write None.
+
+Do not ask the user to paste long prompts or skill text.
+
+Short prompts that should trigger this workflow include:
+
+1. Review current file.
+2. Review selected function.
+3. Review current selection.
+4. Review function <function-name>.
+5. Static Code Review Function <function-name>.
+6. If the user explicitly asks to review function `<function-name>`, treat that as a function-scope request rather than asking which function to review.

@@ -1,0 +1,13 @@
+{
+  "schema_version": "2.2",
+  "paths": {
+    "base_dir": ".",
+    "pdm_file": "Fe_Super/rb/as/rbcn/core/app/dcom/RBAPLCust/cfg/RBDCOM_Customer.pdm",
+    "config_h": "Fe_Super/rb/as/rbcn/core/app/dcom/RBAPLCust/api/RBAPLCUST_Config.h",
+    "config_elements_h": "Fe_Super/rb/as/rbcn/core/app/dcom/RBAPLCust/api/RBAPLCUST_ConfigElements.h",
+    "config_settings_h": "Fe_Super/rb/as/rbcn/{product_type_lower}/dcompr/cfg/RBDCOM_ConfigSettings.h",
+    "c_output_subdir": "Fe_Super/rb/as/rbcn/core/app/dcom/RBAPLCust/src/{product_type_upper}",
+    "arxml_file": "Fe_Super/rb/as/rbcn/core/app/dcom/RBAPLCust/cfg/{product_type_arxml_folder}/Dcm_CusDiag_Services_EcucValues_{product_type_suffix}.arxml"
+  },
+  "options": {}
+}

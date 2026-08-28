@@ -1,0 +1,263 @@
+# did-toolkit -> DOORS upload mapping (17-column template-aligned)
+#
+# USER-OWNED. The skill never overwrites this file.
+#
+# Location: ``.DCOM_AI/DID_Toolkit_PRJ/inputs/doors_mapping.yaml`` (scaffolded by
+# ``--init-project`` from this template).
+#
+# Workflow (Phase: doors):
+#   1. `doors_fetch` calls MCP `get_doors_module` ->
+#      .DCOM_AI/DID_Toolkit_PRJ/outputs/doors/doors_export.json
+#   2. `anchor` locates one anchor row PER SERVICE by matching the keyword
+#      strings below against `DescriptionOfRequirementRB` in the export.
+#   3. `build_doors_payload` splits FSCS_22.txt and FSCS_2E.txt into per-DID
+#      blocks. Each DID becomes TWO rows:
+#         row 1 (FS): Object Heading = first line of the DID's FSCS,
+#                     Object Text   = "",
+#                     RB_Realizing_SWitem = the .arxml basename,
+#                     RB_Referenced_Testcase / RB_TestEnvironment =
+#                       the FS pair from `role_values` below.
+#         row 2 (CS): Object Heading = "",
+#                     Object Text   = the FULL Behavior section of the
+#                       DID's FSCS (no truncation),
+#                     RB_Realizing_SWitem = the .c basename,
+#                     RB_Referenced_Testcase / RB_TestEnvironment =
+#                       the CS pair from `role_values` below.
+#      Two separate workbooks are written under .DCOM_AI/DID_Toolkit_PRJ/outputs/doors/:
+#         doors_upload_22.xlsx    -- anchored under $22 anchor
+#         doors_upload_2E.xlsx    -- anchored under $2E anchor
+#   4. `doors_upload` POSTs each xlsx through MCP `upload_doors_module`.
+#   5. `doors_links` builds a links workbook (CS row -> FS row, per DID)
+#      and POSTs it through MCP `update_doors_links`.
+#
+# DOORS workbook contract:
+#   * 17 columns aligned to assets/doors_template.xlsx (DOORS imports
+#     without column-mismatch warnings).
+#   * `RB_Realizing_SWitem` is the BASENAME only (no path prefix);
+#     FS row gets the .arxml basename, CS row gets the .c basename
+#     (see `realizing_paths.fs_template` / `realizing_paths.cs_template`).
+#   * `RB_Product` is sourced PER DID from `fscs.json::dids[].product_type`.
+#     There is no global `project.product_type` fall-back — only the
+#     per-DID tag plus the `Common` wildcard.
+#
+# Mode is implicit: each Phase-1 / xlsx-import re-run rebuilds the full DID
+# set, so the upload always REPLACES the prior insert beneath the anchor.
+# Versioning of the DOORS row history is handled by DOORS itself.
+
+# ============================================================================
+# 1) DOORS module identity
+# ============================================================================
+doors:
+  document_uuid: "PUT-DOORS-DOCUMENT-UUID-HERE"   # replace before --phase doors
+  export_format: "json"
+
+# ============================================================================
+# 2) Per-service anchors (insert position in the DOORS module)
+# ----------------------------------------------------------------------------
+# `text` is matched VERBATIM against `DescriptionOfRequirementRB` in the
+# downloaded export. Use multiline strings for wrap-across-row anchors.
+# `heading_field` is the JSON key the DOORS export stores headings under
+# (DescriptionOfRequirementRB on Bosch DWA, ObjectText on some legacy
+# exports). Falls back to `by_absolute_number` if the lookup misses.
+# ============================================================================
+anchors:
+  service_22:
+    heading_field: "DescriptionOfRequirementRB"
+    text: |-
+      The ReadDataByIdentifier service allows the tester to request data record values from the ECU identified by one dataIdentifier.
+      Mainstream configuration should be used.
+    # by_absolute_number: 0           # uncomment to bypass the keyword lookup
+  service_2e:
+    heading_field: "DescriptionOfRequirementRB"
+    text: |-
+      This service allows the Diagnosis tool to write data records into the ECU identified by Record Data Identifiers. The client request message contains 2-byte Data Identifier and the Data Record to be written into Servers memory.
+      Mainstream configuration should be used.
+    # by_absolute_number: 0
+
+# ============================================================================
+# 3) Excel template & sheet layout (mirrors diagcomm-toolkit)
+# ============================================================================
+template:
+  sheet:       "CS Data"
+  header_row:  2          # 1-based row index of the column-name row
+  data_start:  3          # 1-based row index of the first data row
+  size_row:    1          # 1-based row index of the meta row that holds
+                          # sizeRow / sizeColumn (auto-refreshed on write)
+
+# ============================================================================
+# 4) Static defaults for every emitted row
+# ----------------------------------------------------------------------------
+# Values lifted verbatim from assets/doors_template.xlsx so a freshly-
+# generated workbook lines up cell-for-cell with the operator-supplied
+# template. `Number` / `Destination Object` / `Absolute Number` are
+# intentionally absent -- DOORS fills them on import.
+# ============================================================================
+defaults:
+  isPicture:                 "no"
+  RB_RS_CP_Status:           "accepted"
+  RB_RS_MS_Status:           "accepted"
+  RB_Configuration:          "DCOM_ReferenceDiagnosis_CUST"
+  RB_Realizing_SWComponent:  "RBAPLCUST, CUBAS"
+  RB_VerificationType:       "Test"
+  RB_VerificationCriteria:   "No Additional Information Necessary"
+  RB_Analysis_Results:       "Result / Size Estimate / Risk"
+
+# ============================================================================
+# 5) Role-aware column values
+# ----------------------------------------------------------------------------
+# Values that differ between the FS row and the CS row of one DID. The
+# builder pre-resolves these into `row.<key>` on each emitted RowCtx so
+# the YAML `columns` block below can stay declarative.
+#
+# Override per project if your test environment / test-case naming
+# convention differs (e.g. some teams use "HiL" instead of "Labcar/HIL").
+# ============================================================================
+role_values:
+  FS:
+    RB_Referenced_Testcase: "SwT"
+    RB_TestEnvironment:     "Labcar/HIL"
+  CS:
+    RB_Referenced_Testcase: "CT"
+    RB_TestEnvironment:     "SIL Simulation"
+
+# ============================================================================
+# 6) RB_Product mapping
+# ----------------------------------------------------------------------------
+# RB_Product is sourced PER DID from `fscs.json::dids[].product_type`
+# (Phase 1 / xlsx `Product_Type` column). The DOORS row reflects the
+# DID's product association, not any active mirror target.
+#
+# Resolution order (first non-empty wins):
+#   1. `rb_product_overrides[did_hex]` (this file, below)
+#   2. `dids[<hex>].product_type` from .DCOM_AI/DID_Toolkit_PRJ/outputs/fscs/fscs.json
+#   3. empty cell
+#
+# The resolved token is then mapped via `value_maps.RB_Product` (token
+# -> DOORS-display value). The special token `Common` (case-insensitive)
+# expands to EVERY mapped value joined by newline -- the "applies to
+# every product" wildcard.
+# ============================================================================
+value_maps:
+  RB_Product:
+    DPB:    "DPB"
+    ESP:    "ESP 10"
+    ESPCL:  "ESP 10"
+    IPB:    "IPB 2.0"
+    RBU:    "RBU"
+
+rb_product_overrides: {}
+# Example:
+#   rb_product_overrides:
+#     "0x0101": "Common"      # variant coding -> applies to every product
+#     "0xF190": "DPB"
+
+# ============================================================================
+# 7) Per-DID realizing artefact basenames (RB_Realizing_SWitem column)
+# ----------------------------------------------------------------------------
+# Only the FILENAME (basename) lands in the cell -- DOORS does not want
+# path prefixes here. FS row gets the .arxml basename, CS row gets the
+# .c basename, exactly matching the layout in
+# assets/doors_template.xlsx.
+#
+# Templates are formatted with the following placeholders:
+#     {did_hex}          - e.g. "0x5001"
+#     {did_hex_bare}     - e.g. "5001"
+#     {did_name}         - e.g. "Vehicle_mode"
+#     {product_type}     - per-DID product_type (Phase 1 column)
+#     {customer}         - customer literal segment from
+#                          config/project.json::paths.* (legacy
+#                          compatibility only — basenames usually
+#                          don't reference it)
+#
+# A path-shaped template (e.g. "rb/as/.../Foo.arxml") is silently
+# reduced to its basename ("Foo.arxml") so legacy mappings keep working.
+# ============================================================================
+realizing_paths:
+  fs_template: "Dcm_CusDiag_Services_EcucValues_{product_type}.arxml"
+  cs_template: "RBAPLCUST_{did_hex_bare}_{did_name}.c"
+  customer_default: "rbcn"
+
+# ============================================================================
+# 8) Column source bindings  (which cell gets which value)
+# ----------------------------------------------------------------------------
+# Source syntax (mirrors diagcomm-toolkit):
+#   row.<key>             this row's per-DID context, populated by
+#                         build_doors_payload.py:
+#                           row.destination     anchor's AbsoluteNumber (FS row)
+#                                               -- same anchor on both rows of
+#                                                  a DID, so DOORS keeps them
+#                                                  contiguous on insert
+#                           row.absolute_no     blank in insert mode
+#                           row.heading         first line of the DID FSCS
+#                                               (FS row only; "" on CS row)
+#                           row.object_text     CS row only; "" on FS row.
+#                                               Carries the FULL Behavior
+#                                               section verbatim, multi-line
+#                                               preserved.
+#                           row.realizing       per-row basename (FS=.arxml,
+#                                               CS=.c) -- precomputed from
+#                                               realizing_paths above
+#                           row.rb_product      mapped RB_Product cell content,
+#                                               sourced from this DID's
+#                                               product_type (or override)
+#                           row.referenced_testcase  role_values[FS|CS].RB_Referenced_Testcase
+#                           row.test_environment     role_values[FS|CS].RB_TestEnvironment
+#                           row.did_hex         DID hex (uppercase, 0xNNNN)
+#                           row.did_name        DID name (English)
+#                           row.service         "22" or "2E"
+#                           row.role            "FS" or "CS"
+#   extras.<key>          run-time literals:
+#                           extras.project_name
+#                           extras.generated_at
+#                           extras.service        "22" | "2E"
+#   literal:<text>        verbatim, with extras.foo / row.foo expanded inline.
+#                         An empty value (`literal:`) writes a blank cell.
+#
+# Column ORDER is the dict insertion order below; keep it aligned with
+# assets/doors_template.xlsx so DOORS does not warn about column drift.
+# ============================================================================
+columns:
+  "Number":                   "literal:"
+  "Destination Object":       "row.destination"
+  "isPicture":                "literal:no"
+  "Absolute Number":          "row.absolute_no"
+  "Object Heading":           "row.heading"
+  "Object Text":              "row.object_text"
+  "RB_RS_CP_Status":          "literal:accepted"
+  "RB_RS_MS_Status":          "literal:accepted"
+  "RB_Product":               "row.rb_product"
+  "RB_Configuration":         "literal:DCOM_ReferenceDiagnosis_CUST"
+  "RB_Realizing_SWComponent": "literal:RBAPLCUST, CUBAS"
+  "RB_Realizing_SWitem":      "row.realizing"
+  "RB_VerificationType":      "literal:Test"
+  "RB_VerificationCriteria":  "literal:No Additional Information Necessary"
+  "RB_Analysis_Results":      "literal:Result / Size Estimate / Risk"
+  "RB_Referenced_Testcase":   "row.referenced_testcase"
+  "RB_TestEnvironment":       "row.test_environment"
+
+# ============================================================================
+# 9) DOORS-Link upload (post-import auto-link)
+# ----------------------------------------------------------------------------
+# After the two FSCS workbooks succeed, the orchestrator builds ONE links
+# workbook that points each DID's CS row at its FS row (i.e. the row that
+# carries Object Text links back up to the row that carries the matching
+# Object Heading), then POSTs it through MCP `update_doors_links`.
+#
+# `link_type` is the Bosch link-module name; `link_module_uuid` is the
+# DOORS module UUID that hosts the Link Module (NOT the same as
+# `doors.document_uuid`). Both must be filled before the link upload runs;
+# the orchestrator no-ops the link step (with a warning) if they are blank.
+# ============================================================================
+links:
+  enabled: true
+  link_type: "Realisation"           # name of the Link Module (rename per project)
+  link_module_uuid: ""               # UUID of the Link Module to receive rows
+  direction: "cs_to_fs"              # CS row points UP at FS row (per spec)
+
+# ============================================================================
+# 10) Upload-time hints
+# ============================================================================
+upload:
+  init_timeout:    15      # MCP session-init timeout, seconds
+  upload_timeout:  180     # per-call upload timeout, seconds
+  dry_run:         false

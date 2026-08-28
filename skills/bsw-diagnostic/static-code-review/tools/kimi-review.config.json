@@ -1,0 +1,64 @@
+{
+  "promptVersion": "engineered-v1",
+  "ruleVersion": "compact-rules-v1",
+  "aiModelDisplayName": "Kimi 2.5",
+  "reportTitle": "Static Code Review Report",
+  "reportTitles": {
+    "en": "Static Code Review Report",
+    "zh-CN": "静态代码审查报告"
+  },
+  "defaultMaxConfirmedFindings": 2,
+  "defaultMinimumDisplayedSeverity": "major",
+  "defaultReportBaseName": "static-code-review-report.current-file",
+  "api": {
+    "baseUrl": "https://api.moonshot.cn/v1",
+    "model": "moonshot-v1-8k",
+    "timeoutSeconds": 120
+  },
+  "skill": {
+    "skillFile": "skills/static-code-review-workflow/SKILL.md",
+    "guidelineFiles": [
+      "skills/static-code-review-workflow/guidelines/general_coding_rules.md",
+      "skills/static-code-review-workflow/guidelines/arithmetic_coding_rules.md"
+    ]
+  },
+  "webAutomation": {
+    "enabled": true,
+    "url": "https://kimi.moonshot.cn/",
+    "browser": "msedge",
+    "userDataDir": "%LOCALAPPDATA%/KimiReview/msedge-profile",
+    "promptTemplate": "请使用我上传的 skill pack 和源码文件完成代码审查。只评审源码文件，不要把 skill pack 当作待评审对象。请按 skill pack 里的输出契约直接返回 Review Result、Markdown Report、English HTML Report 和 Chinese HTML Report。默认只显示 Major 及以上的 finding，Minor 和 Info 不要出现在最终报告中。",
+    "selectors": {
+      "inputFile": "input[type='file']",
+      "sendButton": "button:has-text('发送'), button:has-text('Send')",
+      "assistantMessage": ".markdown, [data-testid='assistant-message'], .message-assistant"
+    },
+    "timeouts": {
+      "pageReadyMs": 30000,
+      "responseReadyMs": 300000,
+      "idlePollMs": 1500
+    }
+  },
+  "compactRuleReferences": [
+    {
+      "id": "review-policy.functional-impact",
+      "title": "Only code-proven functional issues stay high severity",
+      "guidance": "Keep major or critical only when the reviewed code directly proves correctness, runtime, memory, concurrency, security, or externally visible impact."
+    },
+    {
+      "id": "review-policy.dedup",
+      "title": "Collapse same-root-cause findings",
+      "guidance": "If multiple observations describe the same integer conversion, boundary, or logic defect, keep only the single most specific actionable finding."
+    },
+    {
+      "id": "review-policy.speculation",
+      "title": "Suppress speculative findings",
+      "guidance": "Do not keep null-pointer, caller-contract, wraparound, portability, or defensive-programming findings unless the failing path is directly visible in the reviewed code."
+    },
+    {
+      "id": "general_coding_rules.4.5",
+      "title": "Runtime-error-prone arithmetic and conversion constructs",
+      "guidance": "Use this rule only when the code directly demonstrates arithmetic or conversion behavior that can change program results."
+    }
+  ]
+}

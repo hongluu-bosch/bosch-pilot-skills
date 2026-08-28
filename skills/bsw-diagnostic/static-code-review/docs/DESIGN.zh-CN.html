@@ -1,0 +1,390 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Static Code Review 方案设计文档</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #5b6472;
+      --line: #d7deea;
+      --accent: #0f4c81;
+      --accent-soft: #e7f1fb;
+      --ok: #17603a;
+      --warn: #8a5a00;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(180deg, #eef3fb 0%, var(--bg) 100%);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 56px;
+    }
+    .hero, section, nav {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
+      margin-bottom: 20px;
+    }
+    .hero {
+      padding: 28px;
+      background: linear-gradient(135deg, #0f4c81, #2368a2);
+      color: #ffffff;
+    }
+    .hero h1 { margin: 0 0 10px; font-size: 32px; }
+    .hero p { margin: 0; max-width: 820px; }
+    nav, section { padding: 22px 24px; }
+    h2 { margin-top: 0; color: var(--accent); font-size: 24px; }
+    h3 { color: #173a5e; margin-bottom: 8px; }
+    p, li { color: var(--text); }
+    .muted { color: var(--muted); }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .grid-spaced {
+      margin-bottom: 14px;
+    }
+    .card {
+      background: #fbfcfe;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #eef4fb; }
+    code {
+      background: #eef4fb;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: Consolas, monospace;
+    }
+    .note, .warn {
+      border-left: 5px solid var(--accent);
+      background: var(--accent-soft);
+      padding: 12px 14px;
+      border-radius: 10px;
+    }
+    .warn {
+      border-left-color: var(--warn);
+      background: #fff6df;
+    }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>Static Code Review 方案设计文档</h1>
+      <p>本文档描述 <code>static-code-review</code> 便携包的设计目标、架构分层、核心组件、主要流程、失败模型和工程落地边界，面向需要维护或二次集成这套方案的工程师。</p>
+      <div class="chips">
+        <span class="chip">Portable Bundle</span>
+        <span class="chip">Cline + Kimi</span>
+        <span class="chip">Import / Validate / Gate</span>
+        <span class="chip">Windows First</span>
+      </div>
+    </header>
+
+    <nav>
+      <strong>文档导航</strong>
+      <p class="muted">配套文档：<a href="USAGE.zh-CN.html">中文使用文档</a> | <a href="DESIGN.en.html">English Design</a> | <a href="USAGE.en.html">English Usage</a></p>
+    </nav>
+
+    <section>
+      <h2>1. 目标与非目标</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>目标</h3>
+          <ul>
+            <li>把 Kimi review 方案收敛为一个可复制到任意项目根目录的便携包。</li>
+            <li>让普通用户尽量通过短提示和少量点击完成当前文件或函数的 review。</li>
+            <li>将 Kimi 自由文本回复稳定落地为统一命名、可归档的正式 HTML 报告。</li>
+            <li>提供结构校验和源文件新鲜度 gate，避免“报告存在但已失效”。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>非目标</h3>
+          <ul>
+            <li>不试图判断 finding 本身是否绝对正确，gate 只检查报告存在、格式完整、可选的新鲜度。</li>
+            <li>不依赖专门的 VS Code 扩展；当前方案以规则文件、任务和脚本为主。</li>
+            <li>不保证 Kimi 网页自动化在任何时间都稳定可用，网页 DOM 变化会影响 <code>RunWeb</code>。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. 用户角色与使用层次</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>角色</th>
+            <th>主要入口</th>
+            <th>典型动作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>普通用户</td>
+            <td>Cline 提示词 + VS Code 任务</td>
+            <td>打开当前文件，说 <code>Static Code Review Current File.</code>，其余步骤由系统自动完成。</td>
+          </tr>
+          <tr>
+            <td>项目集成者</td>
+            <td><code>.clinerules</code>、<code>.vscode/tasks.json</code>、README</td>
+            <td>把便携包复制进项目，安装规则，给团队提供统一入口。</td>
+          </tr>
+          <tr>
+            <td>维护者</td>
+            <td><code>tools/kimi_review_pipeline.py</code> 及相关脚本</td>
+            <td>维护导入、校验、gate、网页自动化和输出契约。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>3. 架构概览</h2>
+      <div class="grid grid-spaced">
+        <div class="card">
+          <h3>用户视角</h3>
+          <p>用户只需要打开当前文件并触发 <code>Static Code Review Current File.</code>，其余步骤默认自动完成。</p>
+        </div>
+        <div class="card">
+          <h3>系统视角</h3>
+          <p>系统会依次执行规则检查、AI 行为影响判断、结果融合和正式报告生成。</p>
+        </div>
+        <div class="card">
+          <h3>工程保障视角</h3>
+          <p>脚本链路负责输出契约、结构校验、回归检查和问题定位，保证结果可落盘、可追踪、可回归。</p>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>交互层</h3>
+          <p>Cline 提示词和 VS Code 任务面向最终用户，目标是减少命令记忆成本并统一使用路径。</p>
+        </div>
+        <div class="card">
+          <h3>工作流层</h3>
+          <p><code>tools/kimi_review.ps1</code> 负责统一分发 Action，如 <code>RunWeb</code>、<code>Validate</code>、<code>Gate</code>。</p>
+        </div>
+        <div class="card">
+          <h3>核心执行层</h3>
+          <p><code>tools/kimi_review_pipeline.py</code> 是核心引擎，负责 bundle 生成、响应导入、报告写入、校验和 gate。</p>
+        </div>
+        <div class="card">
+          <h3>知识层</h3>
+          <p>项目规则来自 <code>.github/skills/static-code-review-workflow</code>，通过 <code>.clinerules</code> 和提示约束注入到 Cline/Kimi 流程。</p>
+        </div>
+      </div>
+      <div class="note">
+        推荐的默认流程是“用户两步触发 + 系统后台自动处理”。对用户来说只需打开文件并触发审查；对系统来说，底层仍会执行规则检查、AI 判断、结果融合与报告落盘。
+      </div>
+    </section>
+
+    <section>
+      <h2>4. 核心组件</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>组件</th>
+            <th>职责</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>.clinerules</code></td>
+            <td>把短提示绑定到项目 review 规则</td>
+            <td>支持当前文件、选中函数、命名函数等上下文。</td>
+          </tr>
+          <tr>
+            <td><code>.vscode/tasks.json</code></td>
+            <td>提供用户侧一键任务入口</td>
+            <td>当前已有 <code>Static Code Review Current File</code> 串联任务。</td>
+          </tr>
+          <tr>
+            <td><code>tools/kimi_review.ps1</code></td>
+            <td>统一入口脚本</td>
+            <td>把项目根目录、报告目录、Source 等默认参数封装起来。</td>
+          </tr>
+          <tr>
+            <td><code>tools/kimi_review_pipeline.py</code></td>
+            <td>核心执行器</td>
+            <td>负责导入、结构校验、报告写入和 gate。</td>
+          </tr>
+          <tr>
+            <td><code>review-reports/</code></td>
+            <td>正式输出目录</td>
+            <td>保存当前正式 HTML 报告，并在写入前归档现有正式报告。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>5. 关键流程</h2>
+      <h3>5.1 当前文件 review</h3>
+      <ol>
+        <li>用户打开当前 <code>.c</code> 文件。</li>
+        <li>用户输入 <code>Static Code Review Current File.</code></li>
+        <li>系统启动 AI 代码审查。</li>
+        <li>Rule Pass 根据项目规则库执行规则检查，输出命中项及其代码位置。</li>
+        <li>AI Pass 独立判断功能影响。</li>
+        <li>Fusion Pass 融合两轮结果并确定最终严重级别。若 Rule Pass 命中 Review Severity 为 major 或 critical 的规则，且代码不满足该规则的显式例外条款，则 Fusion 不得省略、合并或降级该 finding。</li>
+        <li>Markdown 报告中需包含 Rule Coverage 段落，列出应用的规则类别、已触发的 major/critical 规则，以及未触发的主要/严重规则类别。</li>
+        <li>系统自动生成正式 HTML 报告并写入 <code>review-reports/</code>，写入前先统一归档根目录里的旧正式报告。</li>
+      </ol>
+
+      <h3>5.2 指定函数 review</h3>
+      <ol>
+        <li>用户先选中函数，或直接说 <code>Static Code Review Function &lt;函数名&gt;.</code></li>
+        <li>Cline 尽量把 review 范围收敛到选区或命名函数。</li>
+        <li>后续规则检查、AI 判断、结果融合和报告生成流程与当前文件相同。</li>
+      </ol>
+      <div class="warn">
+        选中函数是最稳的函数级 review 方式。仅通过函数名触发时，是否精确收敛到函数体，取决于编辑器上下文和模型行为。
+      </div>
+
+      <h3>5.3 七步简图</h3>
+      <ol>
+        <li>打开当前 <code>.c</code> 文件。</li>
+        <li>输入 <code>Static Code Review Current File.</code>。</li>
+        <li>AI 开始代码审查。</li>
+        <li>Rule Pass 执行规则检查，输出命中项及代码位置。</li>
+        <li>AI Pass 独立判断功能影响。</li>
+        <li>Fusion Pass 融合两轮结果并确定最终严重级别；major/critical 规则命中除非满足规则自身显式例外，否则不得省略或降级。</li>
+        <li>生成包含 Rule Coverage 段落的 Markdown 报告。</li>
+        <li>自动生成正式 HTML 报告。</li>
+      </ol>
+      <div class="diagram-wrap">
+        <svg width="920" height="560" viewBox="0 0 920 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="七步流程图">
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#5b6472" />
+            </marker>
+          </defs>
+
+          <rect x="20" y="20" width="180" height="500" rx="16" fill="#eaf2ff" stroke="#0f4c81"/>
+          <text x="110" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="#1f2937">用户</text>
+
+          <rect x="220" y="20" width="680" height="500" rx="16" fill="#eef8ef" stroke="#17603a"/>
+          <text x="560" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="#1f2937">系统自动流程</text>
+
+          <rect x="45" y="90" width="130" height="56" rx="10" fill="#dcecff" stroke="#0f4c81"/>
+          <text x="110" y="113" text-anchor="middle" font-size="13" fill="#1f2937">1. 打开当前</text>
+          <text x="110" y="131" text-anchor="middle" font-size="13" fill="#1f2937">.c 文件</text>
+
+          <rect x="45" y="190" width="130" height="56" rx="10" fill="#dcecff" stroke="#0f4c81"/>
+          <text x="110" y="213" text-anchor="middle" font-size="13" fill="#1f2937">2. 输入指令</text>
+          <text x="110" y="231" text-anchor="middle" font-size="11" fill="#1f2937">Static Code Review</text>
+
+          <line x1="110" y1="146" x2="110" y2="190" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow)"/>
+
+          <rect x="290" y="90" width="180" height="56" rx="10" fill="#e7f6ea" stroke="#17603a"/>
+          <text x="380" y="113" text-anchor="middle" font-size="13" fill="#1f2937">3. AI 开始</text>
+          <text x="380" y="131" text-anchor="middle" font-size="13" fill="#1f2937">代码审查</text>
+
+          <rect x="520" y="90" width="150" height="56" rx="10" fill="#fff6df" stroke="#8a5a00"/>
+          <text x="595" y="122" text-anchor="middle" font-size="13" fill="#1f2937">4. Rule Pass</text>
+
+          <rect x="720" y="90" width="140" height="56" rx="10" fill="#fff6df" stroke="#8a5a00"/>
+          <text x="790" y="122" text-anchor="middle" font-size="13" fill="#1f2937">5. AI Pass</text>
+
+          <rect x="360" y="250" width="190" height="56" rx="10" fill="#e7f6ea" stroke="#17603a"/>
+          <text x="455" y="273" text-anchor="middle" font-size="13" fill="#1f2937">6. Fusion Pass</text>
+          <text x="455" y="291" text-anchor="middle" font-size="13" fill="#1f2937">确定最终严重级别</text>
+
+          <rect x="620" y="250" width="190" height="56" rx="10" fill="#e7f6ea" stroke="#17603a"/>
+          <text x="715" y="273" text-anchor="middle" font-size="13" fill="#1f2937">7. 生成正式报告</text>
+          <text x="715" y="291" text-anchor="middle" font-size="13" fill="#1f2937">正式 HTML</text>
+
+          <line x1="175" y1="218" x2="250" y2="218" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="380" y1="146" x2="380" y2="170" stroke="#5b6472" stroke-width="2"/>
+          <line x1="380" y1="170" x2="595" y2="170" stroke="#5b6472" stroke-width="2"/>
+          <line x1="595" y1="170" x2="595" y2="146" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="670" y1="118" x2="720" y2="118" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="790" y1="146" x2="790" y2="210" stroke="#5b6472" stroke-width="2"/>
+          <line x1="790" y1="210" x2="455" y2="210" stroke="#5b6472" stroke-width="2"/>
+          <line x1="455" y1="210" x2="455" y2="250" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="550" y1="278" x2="620" y2="278" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow)"/>
+
+          <text x="460" y="370" text-anchor="middle" font-size="14" fill="#5b6472">用户只感知前 2 步，后 5 步由系统自动完成。</text>
+        </svg>
+      </div>
+    </section>
+
+    <section>
+      <h2>6. 输出契约</h2>
+      <ul>
+        <li>Kimi 原始回复必须包含 <code>Markdown Report</code> 和一个 <code>```md</code> fenced block。</li>
+        <li>同一回复必须包含 <code>HTML Report</code> 和一个 <code>```html</code> fenced block。</li>
+        <li>Markdown 报告必须包含固定标题：Summary、Confirmed Findings、Open Questions、Suspected But Unconfirmed Issues、Risk Summary、Suggested Next Actions。</li>
+        <li>HTML 报告必须包含完整 HTML 文档结构和对应 section 标题。</li>
+      </ul>
+      <p class="muted">这套契约是 Import、Validate、Gate 能稳定工作的前提。</p>
+    </section>
+
+    <section>
+      <h2>7. 失败模型与错误定位</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Import 失败</h3>
+          <p>通常是 Kimi 回复缺少 fenced block，或导入阶段的 Markdown / HTML 结构不满足契约。</p>
+        </div>
+        <div class="card">
+          <h3>Validate 失败</h3>
+          <p>说明正式报告文件缺失、为空，或标题 / 计数不符合校验规则。</p>
+        </div>
+        <div class="card">
+          <h3>Gate 失败</h3>
+          <p>除结构问题外，还可能是源文件比报告更新，报告已陈旧。</p>
+        </div>
+        <div class="card">
+          <h3>RunWeb 失败</h3>
+          <p>大多与 Kimi 网页 DOM 变化、登录态、上传入口变化有关，而不是报告方案本身的问题。</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>8. 工程落地建议</h2>
+      <ul>
+        <li>把当前文件 review 和 `RunWeb` 自动化一起作为默认路径，并把失败时的校验与 gate 作为标准回归检查。</li>
+        <li>团队内统一要求用 <code>Static Code Review Current File.</code> 和任务 <code>Static Code Review Current File</code>。</li>
+        <li>把 Gate 结果接入人工审查流程，而不是直接替代人工判断 finding 是否成立。</li>
+        <li>在项目升级时优先回归测试 <code>Import -> Validate -> Gate</code> 三步。</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>
+

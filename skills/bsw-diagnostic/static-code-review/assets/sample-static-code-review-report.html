@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Static Code Review Report</title>
+  <style>
+    body { font-family: Segoe UI, Tahoma, sans-serif; background: #f5f7fb; color: #1f2937; margin: 0; padding: 24px; }
+    .page { max-width: 1100px; margin: 0 auto; }
+    .header { background: linear-gradient(135deg, #0f172a, #1d4ed8); color: #ffffff; padding: 24px; border-radius: 16px; }
+    .header h1 { margin: 0 0 8px; font-size: 28px; }
+    .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; opacity: 0.95; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 20px 0; }
+    .summary-card { border-radius: 12px; padding: 14px 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
+    .summary-card strong { display: block; font-size: 22px; margin-bottom: 4px; }
+    .summary-total { background: #e2e8f0; color: #0f172a; }
+    .summary-critical { background: #c2410c; color: #ffffff; }
+    .summary-major { background: #facc15; color: #422006; }
+    .summary-minor { background: #bef264; color: #365314; }
+    .summary-info { background: #bae6fd; color: #0c4a6e; }
+    .card { border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); border-left: 6px solid #94a3b8; }
+    .critical-card { background: #fff1f2; border-left-color: #dc2626; }
+    .major-card { background: #fff7ed; border-left-color: #d97706; }
+    .minor-card { background: #f7fee7; border-left-color: #65a30d; }
+    .neutral-card { background: #ffffff; border-left-color: #94a3b8; }
+    .section-title { margin: 0 0 10px; font-size: 22px; }
+    .badge { display: inline-block; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.03em; }
+    .critical { background: #c2410c; color: #ffffff; }
+    .major { background: #facc15; color: #422006; }
+    .minor { background: #bef264; color: #365314; }
+    code { background: #e2e8f0; padding: 2px 6px; border-radius: 6px; }
+    ul, ol { margin: 10px 0 0 20px; }
+    p { line-height: 1.55; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1>Static Code Review Report</h1>
+      <div class="meta">
+        <span>File: sample.c</span>
+        <span>Date: 2026-05-22T10:00:00Z</span>
+        <span>Scope: file</span>
+      </div>
+    </header>
+
+    <section class="summary">
+      <div class="summary-card summary-total"><strong>3</strong>Total Findings</div>
+      <div class="summary-card summary-critical"><strong>1</strong>Critical</div>
+      <div class="summary-card summary-major"><strong>1</strong>Major</div>
+      <div class="summary-card summary-minor"><strong>1</strong>Minor</div>
+      <div class="summary-card summary-info"><strong>0</strong>Info</div>
+    </section>
+
+    <section class="card critical-card">
+      <span class="badge critical">CRITICAL</span>
+      <h2>Out-of-bounds array write</h2>
+      <p><strong>Evidence:</strong> <code>buffer[index] = value;</code> writes through a runtime-controlled index without a visible bounds check.</p>
+      <p><strong>Functional Impact:</strong> Yes. This can corrupt memory and change runtime behavior.</p>
+      <p><strong>Reasoning:</strong> The defect has direct memory-safety consequences, so <code>critical</code> is justified.</p>
+      <p><strong>Suggested Action:</strong> Add a range check or constrain <code>index</code> before the write.</p>
+    </section>
+
+    <section class="card major-card">
+      <span class="badge major">MAJOR</span>
+      <h2>Ignored error return from sensor read</h2>
+      <p><strong>Evidence:</strong> The return value of <code>Sensor_Read(&amp;value)</code> is ignored and <code>value</code> is used immediately afterward.</p>
+      <p><strong>Functional Impact:</strong> Yes. A failed read can propagate stale or invalid state into later logic.</p>
+      <p><strong>Reasoning:</strong> This can materially affect behavior, but it is not automatically catastrophic.</p>
+      <p><strong>Suggested Action:</strong> Check the return value and handle the failure path explicitly.</p>
+    </section>
+
+    <section class="card minor-card">
+      <span class="badge minor">MINOR</span>
+      <h2>Naming convention violation</h2>
+      <p><strong>Evidence:</strong> The identifier <code>counter</code> does not follow the required naming convention.</p>
+      <p><strong>Functional Impact:</strong> No direct functional impact is shown.</p>
+      <p><strong>Reasoning:</strong> This affects consistency and readability rather than correctness.</p>
+      <p><strong>Suggested Action:</strong> Rename the identifier to match the applicable naming convention.</p>
+    </section>
+
+    <section class="card neutral-card">
+      <h2 class="section-title">Open Questions</h2>
+      <ul>
+        <li>Is <code>index</code> already range-limited by an earlier invariant not shown in the snippet?</li>
+        <li>Is <code>Sensor_Read</code> guaranteed to initialize <code>value</code> even on failure?</li>
+      </ul>
+    </section>
+
+    <section class="card neutral-card">
+      <h2 class="section-title">Risk Summary</h2>
+      <p>The report contains one direct memory-safety defect, one behavior-impacting error-handling issue, and one non-functional naming issue. The first two should be addressed before relying on this code path.</p>
+    </section>
+
+    <section class="card neutral-card">
+      <h2 class="section-title">Suggested Next Actions</h2>
+      <ol>
+        <li>Add an explicit bounds check for the array write.</li>
+        <li>Handle the sensor read failure path before using the output value.</li>
+        <li>Fix the naming issue opportunistically.</li>
+      </ol>
+    </section>
+  </div>
+</body>
+</html>

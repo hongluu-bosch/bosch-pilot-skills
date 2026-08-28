@@ -1,0 +1,12 @@
+{
+  "name": "kimi-review-automation",
+  "private": true,
+  "version": "1.0.0",
+  "description": "No-key Kimi web automation for skill-based code review reports.",
+  "scripts": {
+    "kimi:web-run": "node kimi_web_automation.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.54.2"
+  }
+}

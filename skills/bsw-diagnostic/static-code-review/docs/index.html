@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>static-code-review 文档中心</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #5b6472;
+      --line: #d7deea;
+      --accent: #0f4c81;
+      --accent-2: #2678c8;
+      --soft: #e8f1fd;
+      --soft-2: #eef7ef;
+      --warm: #fff6df;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(180deg, #eef3fb 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 56px;
+    }
+    .hero, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
+      margin-bottom: 20px;
+    }
+    .hero {
+      padding: 28px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 32px;
+    }
+    .panel {
+      padding: 22px 24px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      display: block;
+      text-decoration: none;
+      color: var(--text);
+      background: #fbfcfe;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      border-color: #9db8d8;
+    }
+    .lang {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8f1fd;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .hero-list {
+      margin: 12px 0 0 18px;
+    }
+    .callout,
+    .action-card {
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.14);
+      padding: 16px;
+    }
+    .callout,
+    .action-card {
+      background: #fbfcfe;
+      border: 1px solid var(--line);
+    }
+    .callout,
+    .callout p,
+    .callout h3,
+    .action-card,
+    .action-card p,
+    .action-card strong {
+      color: var(--text);
+    }
+    .callout.user {
+      background: var(--soft);
+    }
+    .callout.owner {
+      background: var(--soft-2);
+    }
+    .callout.warn {
+      background: var(--warm);
+    }
+    h2 {
+      margin-top: 0;
+      color: var(--accent);
+    }
+    h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      color: #173a5e;
+    }
+    p {
+      margin: 0;
+      line-height: 1.6;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.9;
+      margin-bottom: 10px;
+    }
+    ul {
+      margin: 10px 0 0 20px;
+    }
+    ol {
+      margin: 10px 0 0 20px;
+    }
+    code {
+      background: #eef4fb;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: Consolas, monospace;
+    }
+    .hero code {
+      background: #e6eef8;
+      color: #173a5e;
+    }
+    .task {
+      display: inline-block;
+      margin: 6px 8px 0 0;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #eef4fb;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .hero a {
+      color: #f0f7ff;
+    }
+    .hero p,
+    .hero li,
+    .hero strong {
+      color: #f8fbff;
+    }
+    .panel a,
+    .callout a,
+    .action-card a,
+    .card a {
+      color: var(--accent);
+    }
+    .hero-link {
+      margin-top: 14px;
+    }
+    .hero-link a {
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .spaced-action-card {
+      margin-top: 14px;
+    }
+    @media (max-width: 860px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">Documentation Hub</div>
+          <h1>static-code-review 文档中心</h1>
+          <p>这是 <code>static-code-review</code> 便携包的统一首页。它把当前文件 review、函数级 review、导入、校验、门禁和正式文档入口收拢到一个页面，方便用户和维护者各自找到最短路径。</p>
+          <ul class="hero-list">
+            <li>普通用户：当前文件用 <code>Static Code Review Current File</code>，函数级 review 用 <code>Static Code Review Selected Function</code>。</li>
+            <li>系统：自动执行规则检查、AI 判断、结果融合和正式报告生成。</li>
+            <li>维护者：优先看设计文档，理解规则、校验、回归和问题定位链路。</li>
+          </ul>
+          <p class="hero-link"><a href="USAGE.en.html">English usage guide</a></p>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <h2>你现在最该点哪里</h2>
+      <div class="quick-grid">
+        <div class="callout user">
+          <h3>我是普通用户</h3>
+          <p>先看 <a href="USAGE.zh-CN.html">中文使用文档</a>，按“两步触发、自动出报告”的默认路径操作。</p>
+        </div>
+        <div class="callout owner">
+          <h3>我是维护者 / 集成者</h3>
+          <p>先看 <a href="DESIGN.zh-CN.html">中文设计文档</a>，再根据需要调整规则、任务和脚本。</p>
+        </div>
+        <div class="callout warn">
+          <h3>我要最快开始</h3>
+          <p>先在 VS Code 中打开 <code>static-code-review</code> 文件夹，运行 <code>Static Code Review Setup</code>，确认 Kimi 网页已登录，再回到源码文件运行任务 <code>Static Code Review Current File</code>；如果只审查某个函数，先选中函数再运行 <code>Static Code Review Selected Function</code>。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>文档入口</h2>
+      <div class="grid">
+        <a class="card" href="DESIGN.zh-CN.html">
+          <span class="lang">中文</span>
+          <h3>设计文档</h3>
+          <p>说明方案目标、架构分层、核心组件、主流程、失败模型和工程落地边界。</p>
+        </a>
+        <a class="card" href="USAGE.zh-CN.html">
+          <span class="lang">中文</span>
+          <h3>使用文档</h3>
+          <p>面向普通用户，说明如何用短提示和最少操作完成当前文件或函数的 review。</p>
+        </a>
+        <a class="card" href="DESIGN.en.html">
+          <span class="lang">English</span>
+          <h3>Design Document</h3>
+          <p>Covers goals, architecture, core components, flows, failure model, and rollout boundaries.</p>
+        </a>
+        <a class="card" href="USAGE.en.html">
+          <span class="lang">English</span>
+          <h3>Usage Guide</h3>
+          <p>Explains the end-user workflow for current-file and function-level review with minimal steps.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>默认操作路径</h2>
+      <ol>
+        <li>先在 VS Code 中打开 <code>static-code-review</code> 文件夹，运行任务 <code>Static Code Review Setup</code>。</li>
+        <li>在 VS Code 中打开当前要审查的 <code>.c</code> 文件。</li>
+        <li>运行 VS Code 任务 <code>Static Code Review Current File</code>。</li>
+        <li>到 <code>review-reports/</code> 查看正式 HTML 报告。</li>
+      </ol>
+      <p class="muted">用户只需要完成前 2 个动作并保持 Kimi 网页登录；规则检查、AI 判断、结果融合和报告生成会在后台自动完成。</p>
+      <p class="muted">如果只审查某个函数，先在编辑器中选中函数，再运行 <code>Static Code Review Selected Function</code>。</p>
+    </section>
+
+    <section class="panel">
+      <h2>关键提示词与任务</h2>
+      <div class="action-card">
+        <p><strong>推荐入口</strong></p>
+        <span class="task">Static Code Review Current File</span>
+        <span class="task">Static Code Review Selected Function</span>
+      </div>
+      <div class="action-card spaced-action-card">
+        <p><strong>任务</strong></p>
+        <span class="task">Static Code Review Setup</span>
+        <span class="task">Static Code Review Current File</span>
+        <span class="task">Static Code Review Selected Function</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>常见问题</h2>
+      <div class="quick-grid">
+        <div class="callout user">
+          <h3>没有生成报告</h3>
+          <p>先确认你已经在 <code>static-code-review</code> 文件夹里执行过 <code>Static Code Review Setup</code>，并且当前打开的是要审查的 <code>.c</code> 文件；当前文件场景重新运行 <code>Static Code Review Current File</code>，函数级场景先选中函数再运行 <code>Static Code Review Selected Function</code>。</p>
+        </div>
+        <div class="callout owner">
+          <h3>报告内容不完整</h3>
+          <p>通常是导入的 Kimi 回复不完整。重新复制完整回复后，再重新执行当前文件 review。</p>
+        </div>
+        <div class="callout warn">
+          <h3>报告已经过期</h3>
+          <p>如果源码在报告生成后又被修改，重新触发一次当前文件 review 即可。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

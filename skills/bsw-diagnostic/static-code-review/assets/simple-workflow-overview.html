@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Standalone Static Code Review Skill Workflow</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --text: #1f2937;
+      --muted: #475569;
+      --line: #cbd5e1;
+      --panel: #ffffff;
+      --header-a: #0f172a;
+      --header-b: #1d4ed8;
+      --step-a: #e0f2fe;
+      --step-b: #dcfce7;
+      --step-c: #fff7ed;
+      --step-d: #f5f3ff;
+      --step-e: #fef3c7;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: linear-gradient(180deg, #eef3fb 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--header-a), var(--header-b));
+      color: #fff;
+      padding: 24px;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 30px;
+    }
+
+    .hero p {
+      margin: 0;
+      line-height: 1.55;
+      max-width: 850px;
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    .panel {
+      margin-top: 22px;
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    }
+
+    .panel h2 {
+      margin: 0 0 16px;
+      font-size: 22px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .step {
+      position: relative;
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 168px;
+      border: 1px solid var(--line);
+    }
+
+    .step h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .step .tag {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .step-1 { background: var(--step-a); }
+    .step-2 { background: var(--step-b); }
+    .step-3 { background: var(--step-c); }
+    .step-4 { background: var(--step-d); }
+    .step-5 { background: var(--step-e); }
+
+    .arrow-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin: 10px 7px 2px;
+      color: #64748b;
+      font-size: 28px;
+      text-align: center;
+    }
+
+    .notes {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .note {
+      border-radius: 14px;
+      padding: 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .note h3 {
+      margin: 0 0 10px;
+      font-size: 17px;
+    }
+
+    .note ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .explain {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .explain .card {
+      border-radius: 14px;
+      padding: 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 17px;
+    }
+
+    .card p,
+    .card li {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .card ol,
+    .card ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    @media (max-width: 980px) {
+      .flow { grid-template-columns: 1fr; }
+      .arrow-row { display: none; }
+      .notes, .explain { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>Standalone Static Code Review Skill Workflow</h1>
+      <p>
+        This page shows the simplified workflow of the standalone skill. The main use is direct code review with functional-impact classification,
+        while finding lists and exported reports remain optional inputs for validation and follow-up review.
+      </p>
+    </header>
+
+    <section class="panel">
+      <h2>Simple Flow</h2>
+
+      <div class="flow">
+        <section class="step step-1">
+          <div class="tag">Step 1</div>
+          <h3>Input</h3>
+          <p>
+            Start with a focused code snippet or a source file with a clear review goal.
+            Existing finding lists and exported reports are also supported when you want to validate earlier review output.
+          </p>
+        </section>
+
+        <section class="step step-2">
+          <div class="tag">Step 2</div>
+          <h3>Validate</h3>
+          <p>
+            Check each issue against the actual code and the bundled guidelines.
+            Confirm whether the finding is real and supported by evidence.
+          </p>
+        </section>
+
+        <section class="step step-3">
+          <div class="tag">Step 3</div>
+          <h3>Deduplicate</h3>
+          <p>
+            If multiple findings describe the same underlying defect, keep only the most specific and actionable one.
+          </p>
+        </section>
+
+        <section class="step step-4">
+          <div class="tag">Step 4</div>
+          <h3>Classify</h3>
+          <p>
+            Keep only clearly behavior-impacting issues as major or critical.
+            Move weak, contextual, or uncertain issues out of confirmed findings.
+          </p>
+        </section>
+
+        <section class="step step-5">
+          <div class="tag">Step 5</div>
+          <h3>Output</h3>
+          <p>
+            Produce either a chat review result or Markdown and HTML reports,
+            depending on which prompt entry point is used.
+          </p>
+        </section>
+      </div>
+
+      <div class="arrow-row" aria-hidden="true">
+        <div>&rarr;</div>
+        <div>&rarr;</div>
+        <div>&rarr;</div>
+        <div>&rarr;</div>
+      </div>
+    </section>
+
+    <section class="notes">
+      <div class="note">
+        <h3>Common Inputs</h3>
+        <ul>
+          <li>Focused code snippet with a review question</li>
+          <li>Source file with a clear review goal</li>
+          <li>Optional finding list or exported report</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <h3>Main Outputs</h3>
+        <ul>
+          <li>Confirmed Findings</li>
+          <li>Open Questions</li>
+          <li>Suspected But Unconfirmed Issues</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <h3>Regression Check</h3>
+        <ul>
+          <li>Deduplicate to one major</li>
+          <li>Downgrade non-functional issues</li>
+          <li>Escalate true critical defects</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="explain">
+      <div class="card">
+        <h3>What This Skill Is Good At</h3>
+        <ol>
+          <li>Reviewing code directly against bundled rules</li>
+          <li>Reclassifying severity by actual functional impact</li>
+          <li>Removing duplicates and noisy guideline-only items</li>
+          <li>Creating a more defensible final review result</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>What This Skill Is Not</h3>
+        <ol>
+          <li>Not a replacement for a deterministic scanner</li>
+          <li>Not a first-pass "find everything" tool</li>
+          <li>Not a release gate by itself</li>
+          <li>Not a reason to keep speculative findings as confirmed defects</li>
+        </ol>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

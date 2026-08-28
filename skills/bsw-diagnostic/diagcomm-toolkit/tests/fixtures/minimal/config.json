@@ -1,0 +1,18 @@
+{
+  "$schema": "diagcomm-toolkit/v2",
+  "_comment": "diagcomm-toolkit fixture sibling (1.13.0+). Owns the project's paths + options; values.json owns project + parameters. conftest.py copies this file into the synthesized inputs/ dir as DiagComm_config.json AND mirrors paths/options into runtime.DEFAULT_PATHS / DEFAULT_OPTIONS so lazy-seed reuses the fixture's dcom layout instead of the standard Bosch AUTOSAR pattern.",
+  "paths": {
+    "base_dir": ".",
+    "dcom_root": "dcom",
+    "cantp_common": "RBAPLCust/cfg/Common/CanTp_CusDiag_EcucValues.arxml",
+    "cantp_feature_file": "Cubas/cfg/CanTp_Feature_EcucValues.arxml",
+    "dcm_common": "RBAPLCust/cfg/Common/Dcm_CusDiag_Can_EcucValues.arxml",
+    "dcm_feature_file": "Cubas/cfg/Dcm_Feature_EcucValues.arxml",
+    "dcm_services_common": "RBAPLCust/cfg/Common/Dcm_CusDiag_Services_EcucValues_SingleCANID.arxml",
+    "can_pt_file": "RBAPLCust/cfg/{product_type}/Can{can_channel}_CusDiag_EcucValues_{product_type}.arxml"
+  },
+  "options": {
+    "dry_run_default": true,
+    "validate_before_apply": true
+  }
+}

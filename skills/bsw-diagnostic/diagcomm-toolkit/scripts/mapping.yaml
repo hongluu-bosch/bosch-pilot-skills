@@ -1,0 +1,258 @@
+# Authoritative locator catalog for the diagcomm-toolkit skill.
+#
+# This is the SINGLE SOURCE OF TRUTH for the mapping between user-facing
+# parameter keys (DiagComm_values.json) and arxml nodes. It is loaded
+# at import time by scripts/mapping.py, which builds the PARAM_MAP list
+# consumed by pipeline.py / arxml_patcher.py. Do not hand-edit PARAM_MAP.
+#
+# Schema for each `params` entry:
+#   param         dotted key into DiagComm_values.json (e.g. CAN_DLC.rx_dl)
+#   file          file-alias key, resolved via DiagComm_values.json::paths
+#                 (must exist in that mapping)
+#   locator       how to find the target XML node. One of:
+#     {type: def_suffix,             def_suffix: <str>,
+#      [context_container_def_suffix: <str>]}
+#     {type: def_suffix_any,         def_suffix: [<str>, ...],
+#      [context_container_def_suffix: <str>]}
+#     {type: def_suffix_under_short_name,
+#      def_suffix: <str>, ancestor_short_name: <str>}
+#     {type: def_suffix,             def_suffix: <str>,
+#      ancestor_short_name_prefix: <str>}
+#   transform     name of a callable in scripts/mapping.py::TRANSFORMS
+#   multi         update every match (true) or only the first (false)
+#   optional      zero-hit becomes a WARN instead of an ERROR (default: false)
+#   derived       treated as synthetic; pipeline computes the value and
+#                 the lazy-seed reverse walk skips it (default: false)
+#
+# File alias strings (must match DiagComm_values.json::paths keys):
+#   cantp_common          RBAPLCust/cfg/Common/CanTp_CusDiag_EcucValues.arxml
+#   cantp_feature_file    Cubas/cfg/CanTp_Feature_EcucValues.arxml
+#   dcm_common            RBAPLCust/cfg/Common/Dcm_CusDiag_Can_EcucValues.arxml
+#   dcm_feature_file      Cubas/cfg/Dcm_Feature_EcucValues.arxml
+#   dcm_services_common   RBAPLCust/cfg/Common/Dcm_CusDiag_Services_EcucValues_SingleCANID.arxml
+#   can_pt_file           RBAPLCust/cfg/<PT>/Can<can_channel>_CusDiag_EcucValues_<PT>.arxml
+#
+# When adding / removing entries, re-run (from project root; <skill> =
+# e.g. ~/.cursor/skills/diagcomm-toolkit):
+#   python <skill>/scripts/pipeline.py landing-report   # expected hit counts
+#   python <skill>/scripts/pipeline.py validate         # 0 errors / 0 warnings
+#   python <skill>/scripts/pipeline.py apply --dry-run  # sanity check
+
+params:
+  # ---- CAN-TP timing on TX side ---------------------------------------------
+  # TX-side SHORT-NAMEs look like CanTpTxNSdu_CusDiag / CanTpTxNSdu_CusDiagPhy,
+  # so we pin the context via the ancestor container's DEFINITION-REF suffix.
+  - param: N_As
+    file: cantp_common
+    locator: {type: def_suffix, def_suffix: CanTpNas,
+              context_container_def_suffix: CanTpTxNSdu}
+    transform: ms_to_seconds
+    multi: true
+  - param: N_Bs
+    file: cantp_common
+    locator: {type: def_suffix, def_suffix: CanTpNbs,
+              context_container_def_suffix: CanTpTxNSdu}
+    transform: ms_to_seconds
+    multi: true
+  - param: N_Cs
+    file: cantp_common
+    locator: {type: def_suffix, def_suffix: CanTpNcs,
+              context_container_def_suffix: CanTpTxNSdu}
+    transform: ms_to_seconds
+    multi: true
+
+  # ---- CAN-TP timing on RX side ---------------------------------------------
+  - param: N_Ar
+    file: cantp_common
+    locator: {type: def_suffix, def_suffix: CanTpNar,
+              context_container_def_suffix: CanTpRxNSdu}
+    transform: ms_to_seconds
+    multi: true
+  - param: N_Br
+    file: cantp_common
+    locator: {type: def_suffix, def_suffix: CanTpNbr,
+              context_container_def_suffix: CanTpRxNSdu}
+    transform: ms_to_seconds
+    multi: true
+  - param: N_Cr
+    file: cantp_common
+    locator: {type: def_suffix, def_suffix: CanTpNcr,
+              context_container_def_suffix: CanTpRxNSdu}
+    transform: ms_to_seconds
+    multi: true
+
+  # ---- Flow control ---------------------------------------------------------
+  - param: BS
+    file: cantp_common
+    locator: {type: def_suffix, def_suffix: CanTpBs,
+              context_container_def_suffix: CanTpRxNSdu}
+    transform: int_str
+    multi: true
+  # STmin: try both spellings (CanTpSTmin is canonical in AUTOSAR_CanTp,
+  # CanTpStMin is a legacy variant some generators produce).
+  - param: STmin
+    file: cantp_common
+    locator: {type: def_suffix_any,
+              def_suffix: [CanTpSTmin, CanTpStMin],
+              context_container_def_suffix: CanTpRxNSdu}
+    transform: ms_to_seconds
+    multi: true
+    optional: true
+
+  # ---- DLC / frame type: split RX / TX --------------------------------------
+  # Some projects need asymmetric RX/TX (e.g. RX accepts both Classic CAN
+  # and CAN-FD while TX sends only CAN-FD, or the reverse). Each direction
+  # configured independently. CanTpFlexibleDataRateSupport is DERIVED from
+  # rx_frame_type / tx_frame_type (see flexible_fd below).
+  - param: CAN_DLC.rx_frame_type
+    file: can_pt_file
+    locator: {type: def_suffix, def_suffix: CanIfRxPduCanIdType,
+              ancestor_short_name_prefix: CusDiagRCV}
+    transform: canfd_pdu_id_type
+    multi: true
+  - param: CAN_DLC.tx_frame_type
+    file: can_pt_file
+    locator: {type: def_suffix, def_suffix: CanIfTxPduCanIdType,
+              ancestor_short_name_prefix: CusDiagXMT}
+    transform: canfd_pdu_id_type
+    multi: true
+  - param: CAN_DLC.rx_dl
+    file: can_pt_file
+    locator: {type: def_suffix, def_suffix: PduLength,
+              ancestor_short_name_prefix: CusDiagRCV}
+    transform: int_str
+    multi: true
+  - param: CAN_DLC.tx_dl
+    file: can_pt_file
+    locator: {type: def_suffix, def_suffix: PduLength,
+              ancestor_short_name_prefix: CusDiagXMT}
+    transform: int_str
+    multi: true
+
+  # Derived: true iff rx_frame_type or tx_frame_type is CANFD.
+  # pipeline._inject_derived_values populates values["CAN_DLC"]["flexible_fd"]
+  # before _plan_entries runs; the normal bool_str transform emits the literal.
+  # derived=true keeps this internal key out of user-facing defaults.
+  - param: CAN_DLC.flexible_fd
+    file: cantp_feature_file
+    locator: {type: def_suffix, def_suffix: CanTpFlexibleDataRateSupport}
+    transform: bool_str
+    multi: true
+    derived: true
+
+  # ---- Addressing format ----------------------------------------------------
+  # AUTOSAR_CanTp splits addressing into CanTpRxAddressingFormat (RX side) and
+  # CanTpTxAddressingFormat (TX side); write to all three so they stay aligned.
+  - param: Addressing_Method
+    file: cantp_common
+    locator: {type: def_suffix_any,
+              def_suffix: [CanTpAddressingFormat,
+                           CanTpRxAddressingFormat,
+                           CanTpTxAddressingFormat]}
+    transform: addressing_format
+    multi: true
+    optional: true
+
+  # ---- DCM session timing (Max fields only) --------------------------------
+  # P2 Max / P2* Max are the MAXIMUM server response times, written only to
+  # the *Max nodes in the Services file (one per DcmDspSessionRow: DEFAULT /
+  # EXTENDED / PROGRAMMING). The *Adjust nodes in Dcm_CusDiag_Can_EcucValues
+  # are intentionally NOT modified -- the firmware offset stays as calibrated.
+  - param: P2_Max
+    file: dcm_services_common
+    locator: {type: def_suffix, def_suffix: DcmDspSessionP2ServerMax}
+    transform: ms_to_seconds
+    multi: true
+  - param: P2_Star_Max
+    file: dcm_services_common
+    locator: {type: def_suffix, def_suffix: DcmDspSessionP2StarServerMax}
+    transform: ms_to_seconds
+    multi: true
+
+  # ---- Product-specific Can arxml: ID format + request/response IDs --------
+  - param: CAN_ID_Format
+    file: can_pt_file
+    locator: {type: def_suffix, def_suffix: CanIdType}
+    transform: can_id_type
+    multi: true
+
+  # CAN_Functional_Request_ID lands on BOTH the Can driver filter code
+  # (CanHwFilter_0/CanHwFilterCode) and the CanIf Rx Pdu's CanId.
+  - param: CAN_Functional_Request_ID
+    file: can_pt_file
+    locator: {type: def_suffix_under_short_name,
+              def_suffix: CanHwFilterCode,
+              ancestor_short_name: CusDiagRCVFunc}
+    transform: hex_to_decimal
+    multi: true
+  - param: CAN_Functional_Request_ID
+    file: can_pt_file
+    locator: {type: def_suffix_under_short_name,
+              def_suffix: CanIfRxPduCanId,
+              ancestor_short_name: CusDiagRCVFunc}
+    transform: hex_to_decimal
+    multi: true
+
+  # CAN_Physical_Request_ID: same two-pronged landing under CusDiagRCV.
+  - param: CAN_Physical_Request_ID
+    file: can_pt_file
+    locator: {type: def_suffix_under_short_name,
+              def_suffix: CanHwFilterCode,
+              ancestor_short_name: CusDiagRCV}
+    transform: hex_to_decimal
+    multi: true
+  - param: CAN_Physical_Request_ID
+    file: can_pt_file
+    locator: {type: def_suffix_under_short_name,
+              def_suffix: CanIfRxPduCanId,
+              ancestor_short_name: CusDiagRCV}
+    transform: hex_to_decimal
+    multi: true
+
+  # CAN_Response_ID: two spots under CusDiagXMT.
+  #   * CanIf layer: CanIfTxPduCfg/CanIfTxPduCanId (the "real" TX id)
+  #   * Can driver layer: CanHwFilter_0/CanHwFilterCode (kept in sync so
+  #     the controller filter matches)
+  - param: CAN_Response_ID
+    file: can_pt_file
+    locator: {type: def_suffix_under_short_name,
+              def_suffix: CanIfTxPduCanId,
+              ancestor_short_name: CusDiagXMT}
+    transform: hex_to_decimal
+    multi: true
+  - param: CAN_Response_ID
+    file: can_pt_file
+    locator: {type: def_suffix_under_short_name,
+              def_suffix: CanHwFilterCode,
+              ancestor_short_name: CusDiagXMT}
+    transform: hex_to_decimal
+    multi: true
+
+  # ---- CanTp feature file ---------------------------------------------------
+  # PaddingByte and StrictDlcCheck share the same file as flexible_fd.
+  # CanTpRbStrictDlcCheck is a Bosch "Rb" extension and is REQUIRED in this
+  # codebase; the plain AUTOSAR CanTpStrictDlcCheck is kept as a fallback.
+  - param: PaddingByte
+    file: cantp_feature_file
+    locator: {type: def_suffix, def_suffix: CanTpPaddingByte}
+    transform: hex_to_decimal
+    multi: true
+  - param: StrictDlcCheck
+    file: cantp_feature_file
+    locator: {type: def_suffix_any,
+              def_suffix: [CanTpRbStrictDlcCheck, CanTpStrictDlcCheck]}
+    transform: bool_str
+    multi: true
+
+  # ---- Dcm feature file -----------------------------------------------------
+  # NRC78_Times -> DcmDslDiagRespMaxNumRespPend (ECUC-INTEGER-PARAM-DEF, 1 byte).
+  # Caps how many 0x78 (ResponsePending) NRCs the server may send before giving
+  # a final response or aborting (ISO 14229 / UDS). Anchored via ancestor
+  # SHORT-NAME=DcmDslDiagResp to keep suffix-matching unambiguous.
+  - param: NRC78_Times
+    file: dcm_feature_file
+    locator: {type: def_suffix_under_short_name,
+              def_suffix: DcmDslDiagRespMaxNumRespPend,
+              ancestor_short_name: DcmDslDiagResp}
+    transform: int_str
+    multi: true

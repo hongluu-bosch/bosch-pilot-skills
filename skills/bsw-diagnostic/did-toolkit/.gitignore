@@ -1,0 +1,46 @@
+# Stale skill-root workspace directories from pre-v1.26 layouts.
+# As of v1.26.0 the toolkit's working dirs live under
+# `<project-container>/.DCOM_AI/DID_Toolkit_PRJ/` (NOT next to the skill itself), so
+# these paths should never reappear at the skill root. Listed here
+# defensively in case a smoke test or an accidental run ever drops
+# artefacts back in.
+outputs/
+inputs/
+state/
+
+# Pytest scratch leftovers that occasionally appear if pytest is
+# invoked with custom --basetemp / output redirection.
+pytest_out.txt
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor / OS cruft
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local dev virtualenvs (if anyone drops one inside the skill)
+.venv/
+venv/
+
+# Pytest / coverage caches (tests/fixtures/ and tests/golden/ stay committed)
+.pytest_cache/
+.pytest_cache_local/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Mirror provenance sidecar (schema 1.5). Written by the platform
+# mirror layer into per-product Bosch directories (e.g. Fe_Super/esp/);
+# the file records the basename of the input.json that authored that
+# product tree so the project-aware cross-product hard-block can tell
+# whether a duplicate DID belongs to the same project (block) or a
+# different project sharing the same Fe_Super tree (allow). The skill
+# never produces this file directly, but defensive ignore here keeps
+# any accidental copy out of skill commits.
+.did-toolkit-project-id

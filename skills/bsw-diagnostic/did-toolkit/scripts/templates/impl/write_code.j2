@@ -1,0 +1,57 @@
+/**
+ * @ingroup 'RBAPLCust'
+ * @{
+ *
+ * RBAPLCUST_WDBI_<< func_name_only >>.c
+<% if is_eeprom %> * Contains function to write NVM Information into EEPROM
+<% else %> * Contains function to write Information.
+<% endif %> *
+ * << func_name >>_WriteData -- Write the << func_name_only >> Information
+ *
+ * \copyright
+ * Robert Bosch GmbH reserves all rights even in the event of industrial property rights.
+ * We reserve all rights of disposal such as copying and passing on to third parties.
+ */
+
+
+/* used interfaces */
+
+#include "RBAPLCUST_Global.h"
+<% if is_eeprom %>#include "RBAPLCUST_NVMGeneric.h"
+<% endif %>
+/* realized interfaces */
+
+/* Assert supported configurations: switches, parameters, constants, ... */
+RB_ASSERT_SWITCH_SETTINGS(<< fs_macro >>,
+						  << fs_macro >>_ON,
+						  << fs_macro >>_OFF);
+<< value_range_block >>/*
+ * --------------------------------------------------------------------------
+ * FUNCTION_NAME:
+ *  << func_name >>_WriteData
+ * FUNCTION_NAME_END:
+ * --------------------------------------------------------------------------
+ * FUNCTION_DESCRIPTION:
+ *  Write the << func_name_only >> Information
+ * FUNCTION_DESCRIPTION_END:
+ * --------------------------------------------------------------------------
+ * FUNCTION_PARAMETER:
+ *  Data --- information requested for updating << func_name_only >> information
+ *  ErrorCode -- information about the error caused
+ * FUNCTION_PARAMETER_END:
+ * --------------------------------------------------------------------------
+ * FUNCTION_RETURN:
+ *  E_OK -- means the function is executed successfully
+ *  E_NOT_OK -- means the function is not completed / error code
+ * FUNCTION_RETURN_END:
+ * --------------------------------------------------------------------------
+ */
+
+Std_ReturnType << func_name >>_WriteData (const uint8 * Data, Dcm_NegativeResponseCodeType * ErrorCode)
+{
+<< func_body >>
+}
+
+/** @}
+ * End ingroup 'RBAPLCust'
+ */

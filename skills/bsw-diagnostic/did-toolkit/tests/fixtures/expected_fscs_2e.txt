@@ -1,0 +1,59 @@
+Identifier $F18Ch - ModeSelector
+
+Description
+This identifier writes the ModeSelector
+
+Availability
+Supported in the following diagnostic sessions:
+- extendedDiagnosticSession
+
+Security Level:
+		L1
+
+Request Message:
+Byte 1		$2E = Request Service Id "WriteDataByIdentifier"
+Byte 2-3	$F18C = ModeSelector
+
+Positive Response Message:
+Byte 1		$6E = Response Service Id "WriteDataByIdentifier"
+Byte 2-3	$F18C = ModeSelector
+Byte 4		Data Record
+
+Data Type:		enum
+Storage Position:	EEPROM
+Size:			1 bytes
+R/W State:		W
+NVM Item:		NVM_ID_DCOM_ModeSelector
+Value Range:		Enum: 0x00, 0x01, 0x02
+
+================================================================================
+
+Identifier $F1A1h - CalibrationConstant
+
+Description
+This identifier writes the CalibrationConstant
+
+Availability
+Supported in the following diagnostic sessions:
+- extendedDiagnosticSession
+
+Security Level:
+		L1
+
+Request Message:
+Byte 1		$2E = Request Service Id "WriteDataByIdentifier"
+Byte 2-3	$F1A1 = CalibrationConstant
+
+Positive Response Message:
+Byte 1		$6E = Response Service Id "WriteDataByIdentifier"
+Byte 2-3	$F1A1 = CalibrationConstant
+Byte 4		Data Record
+
+Data Type:		Unsigned
+Storage Position:	EEPROM
+Size:			1 bytes
+R/W State:		W
+NVM Item:		NVM_ID_DCOM_CalibrationConstant
+Value Range:		5 ~ 5
+
+================================================================================

@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# IDE / Editor
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+
+# Runtime artifacts
+.DCOM_AI/
+*.xlsx
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

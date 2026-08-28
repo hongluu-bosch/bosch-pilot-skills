@@ -1,0 +1,34 @@
+# diagcomm-toolkit -- skill checkout .gitignore
+#
+# v2.0.0 split: this is the SKILL repo (scripts / assets / reference /
+# tests). Per-project user data lives in
+# <project>/.DCOM_AI/DiagComm_Toolkit_PRJ/ and is gitignored by the
+# workspace's own .gitignore (auto-written by `--init-project`).
+
+# Python bytecode + tool caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Atomic-write side-effects
+*.tmp
+
+# Defensive guard: refuse to commit an accidentally-scaffolded workspace
+# inside the skill checkout. `pipeline.py --init-project` actively
+# refuses this case, but if someone side-steps the guard, keep the
+# leak out of git.
+.DCOM_AI/
+
+# v1.20.x leftovers. Pre-v2 the workspace WAS the skill checkout, so
+# inputs/, outputs/, state/, .cache/ all lived here. v2 moves them to
+# the per-project workspace; if an old script resurrects them, don't
+# commit user data by accident.
+inputs/
+outputs/
+state/
+.cache/
+
+# Excel lock files (in case anyone re-opens an old in-skill workbook)
+~$*.xlsx
+.~lock.*

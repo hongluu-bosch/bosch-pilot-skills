@@ -1,0 +1,34 @@
+/* ------------------------------------------------------------------------ */
+/* RBFS_DCOM_ModeSelector                                                 */
+/* ------------------------------------------------------------------------ */
+/*DE|DID $F18Ch - ModeSelector is supported |*/
+#define RBFS_DCOM_ModeSelector		RBFS_DCOM_ModeSelector_ON
+
+
+/* ------------------------------------------------------------------------ */
+/* RBFS_DCOM_BaselineCounter                                              */
+/* ------------------------------------------------------------------------ */
+/*DE|DID $F190h - BaselineCounter is supported |*/
+#define RBFS_DCOM_BaselineCounter		RBFS_DCOM_BaselineCounter_ON
+
+
+/* ------------------------------------------------------------------------ */
+/* RBFS_DCOM_LiveTemperature                                              */
+/* ------------------------------------------------------------------------ */
+/*DE|DID $F1A0h - LiveTemperature is supported |*/
+#define RBFS_DCOM_LiveTemperature		RBFS_DCOM_LiveTemperature_ON
+
+
+/* ------------------------------------------------------------------------ */
+/* RBFS_DCOM_CalibrationConstant                                          */
+/* ------------------------------------------------------------------------ */
+/*DE|DID $F1A1h - CalibrationConstant is supported |*/
+#define RBFS_DCOM_CalibrationConstant		RBFS_DCOM_CalibrationConstant_ON
+
+
+/* ------------------------------------------------------------------------ */
+/* RBFS_DCOM_RegionCode                                                   */
+/* ------------------------------------------------------------------------ */
+/*DE|DID $F1A2h - RegionCode is supported |*/
+#define RBFS_DCOM_RegionCode		RBFS_DCOM_RegionCode_ON
+

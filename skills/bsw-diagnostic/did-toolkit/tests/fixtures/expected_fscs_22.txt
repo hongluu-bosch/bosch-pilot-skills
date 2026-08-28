@@ -1,0 +1,164 @@
+Identifier $F190h - BaselineCounter
+
+Description
+This identifier returns the BaselineCounter
+
+Availability
+Supported in the following diagnostic sessions:
+- defaultSession
+- extendedDiagnosticSession
+
+Security Level:
+		L0 (means no security access assurance)
+
+Request Message:
+Byte 1		$22 = Request Service Id "ReadDataByIdentifier"
+Byte 2-3	$F190 = BaselineCounter
+
+Positive Response Message:
+Byte 1		$62 = Response Service Id "ReadDataByIdentifier"
+Byte 2-3	$F190 = BaselineCounter
+Byte 4		Data Record
+Byte 4		counter value
+		Range: 0 ~ 255 
+
+Data Type:		Unsigned
+Storage Position:	EEPROM
+Size:			1 bytes
+R/W State:		R
+NVM Item:		NVM_ID_DCOM_BaselineCounter
+Value Range:		0 ~ 255
+
+================================================================================
+
+Identifier $F18Ch - ModeSelector
+
+Description
+This identifier returns the ModeSelector
+
+Availability
+Supported in the following diagnostic sessions:
+- defaultSession
+- extendedDiagnosticSession
+
+Security Level:
+		L0 (means no security access assurance)
+
+Request Message:
+Byte 1		$22 = Request Service Id "ReadDataByIdentifier"
+Byte 2-3	$F18C = ModeSelector
+
+Positive Response Message:
+Byte 1		$62 = Response Service Id "ReadDataByIdentifier"
+Byte 2-3	$F18C = ModeSelector
+Byte 4		Data Record
+Byte 4		mode code
+		Range: 0x00 ~ 0x02 
+
+Data Type:		enum
+Storage Position:	EEPROM
+Size:			1 bytes
+R/W State:		R
+NVM Item:		NVM_ID_DCOM_ModeSelector
+Value Range:		Enum: 0x00, 0x01, 0x02
+
+================================================================================
+
+Identifier $F1A0h - LiveTemperature
+
+Description
+This identifier returns the LiveTemperature
+
+Availability
+Supported in the following diagnostic sessions:
+- defaultSession
+- extendedDiagnosticSession
+
+Security Level:
+		L0 (means no security access assurance)
+
+Request Message:
+Byte 1		$22 = Request Service Id "ReadDataByIdentifier"
+Byte 2-3	$F1A0 = LiveTemperature
+
+Positive Response Message:
+Byte 1		$62 = Response Service Id "ReadDataByIdentifier"
+Byte 2-3	$F1A0 = LiveTemperature
+Byte 4		Data Record
+Byte 4		temperature
+		Range: 0 ~ 100 C
+
+Data Type:		Unsigned
+Storage Position:	RAM
+Size:			1 bytes
+R/W State:		R
+NVM Item:		
+Value Range:		0 ~ 100 C
+
+================================================================================
+
+Identifier $F1A1h - CalibrationConstant
+
+Description
+This identifier returns the CalibrationConstant
+
+Availability
+Supported in the following diagnostic sessions:
+- defaultSession
+- extendedDiagnosticSession
+
+Security Level:
+		L0 (means no security access assurance)
+
+Request Message:
+Byte 1		$22 = Request Service Id "ReadDataByIdentifier"
+Byte 2-3	$F1A1 = CalibrationConstant
+
+Positive Response Message:
+Byte 1		$62 = Response Service Id "ReadDataByIdentifier"
+Byte 2-3	$F1A1 = CalibrationConstant
+Byte 4		Data Record
+Byte 4		constant
+		Range: 5 ~ 5 
+
+Data Type:		Unsigned
+Storage Position:	EEPROM
+Size:			1 bytes
+R/W State:		R
+NVM Item:		NVM_ID_DCOM_CalibrationConstant
+Value Range:		5 ~ 5
+
+================================================================================
+
+Identifier $F1A2h - RegionCode
+
+Description
+This identifier returns the RegionCode
+
+Availability
+Supported in the following diagnostic sessions:
+- defaultSession
+- extendedDiagnosticSession
+
+Security Level:
+		L0 (means no security access assurance)
+
+Request Message:
+Byte 1		$22 = Request Service Id "ReadDataByIdentifier"
+Byte 2-3	$F1A2 = RegionCode
+
+Positive Response Message:
+Byte 1		$62 = Response Service Id "ReadDataByIdentifier"
+Byte 2-3	$F1A2 = RegionCode
+Byte 4-5		Data Record
+Byte 4-5		region
+		Range: 0x00 ~ 0x03 
+
+Data Type:		enum
+Storage Position:	EEPROM
+Size:			2 bytes
+R/W State:		R
+NVM Item:		NVM_ID_DCOM_RegionCode
+Value Range:		Enum: 0x00, 0x01, 0x02, 0x03
+
+================================================================================

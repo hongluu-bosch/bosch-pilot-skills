@@ -1,0 +1,14 @@
+lxml>=4.9
+PyYAML>=6.0
+openpyxl>=3.1
+xlsxwriter>=3.2
+requests>=2.31
+# Step 8 (DOORS upload) optional credential cache: when present, the
+# user can `--save-credentials` once and stop typing / env-var-ing the
+# DOORS password. Storage is OS-native (Windows Credential Manager via
+# DPAPI, macOS Keychain, Linux Secret Service). Entirely optional --
+# doors_sync.py degrades to CLI flag / $DOORS_PWD / interactive prompt
+# if keyring is not installed. Add a backend (e.g. keyrings.alt) only
+# if your OS has no Secret Service available.
+keyring>=24
+

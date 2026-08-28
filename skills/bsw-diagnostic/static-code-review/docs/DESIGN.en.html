@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Static Code Review Design Document</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #5b6472;
+      --line: #d7deea;
+      --accent: #0f4c81;
+      --accent-soft: #e7f1fb;
+      --warn: #8a5a00;
+    }
+    body { margin: 0; font-family: "Segoe UI", Tahoma, sans-serif; background: linear-gradient(180deg, #eef3fb 0%, var(--bg) 100%); color: var(--text); line-height: 1.65; }
+    .page { max-width: 1100px; margin: 0 auto; padding: 32px 20px 56px; }
+    .hero, section, nav { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06); margin-bottom: 20px; }
+    .hero { padding: 28px; background: linear-gradient(135deg, #0f4c81, #2368a2); color: #ffffff; }
+    .hero h1 { margin: 0 0 10px; font-size: 32px; }
+    nav, section { padding: 22px 24px; }
+    h2 { margin-top: 0; color: var(--accent); font-size: 24px; }
+    h3 { color: #173a5e; margin-bottom: 8px; }
+    .muted { color: var(--muted); }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .chip { padding: 8px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.25); font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .grid-spaced { margin-bottom: 14px; }
+    .card { background: #fbfcfe; border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid var(--line); padding: 12px; text-align: left; vertical-align: top; }
+    th { background: #eef4fb; }
+    code { background: #eef4fb; padding: 2px 6px; border-radius: 6px; font-family: Consolas, monospace; }
+    .note, .warn { border-left: 5px solid var(--accent); background: var(--accent-soft); padding: 12px 14px; border-radius: 10px; }
+    .warn { border-left-color: var(--warn); background: #fff6df; }
+    .diagram-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfe; padding: 12px; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>Static Code Review Design Document</h1>
+      <p>This document describes the design goals, architecture layers, core components, flows, failure model, and rollout boundaries of the <code>static-code-review</code> portable bundle.</p>
+      <div class="chips">
+        <span class="chip">Portable Bundle</span>
+        <span class="chip">Cline + Kimi</span>
+        <span class="chip">Import / Validate / Gate</span>
+        <span class="chip">Windows First</span>
+      </div>
+    </header>
+
+    <nav>
+      <strong>Document Navigation</strong>
+      <p class="muted">Related docs: <a href="USAGE.en.html">English Usage</a> | <a href="DESIGN.zh-CN.html">??????</a> | <a href="USAGE.zh-CN.html">??????</a></p>
+    </nav>
+
+    <section>
+      <h2>1. Goals and Non-Goals</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Goals</h3>
+          <ul>
+            <li>Package the Kimi review workflow into a portable folder that can be copied into any project root.</li>
+            <li>Keep end-user operations short: prompt once, then import, validate, and gate with minimal clicks.</li>
+            <li>Turn Kimi free-form responses into stable, archived formal HTML review reports by normalizing the intermediate Markdown structure.</li>
+            <li>Provide structural validation and freshness-aware gating.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Non-Goals</h3>
+          <ul>
+            <li>The gate does not prove that each finding is correct; it checks report success, structure, and optional freshness only.</li>
+            <li>The workflow does not depend on a dedicated VS Code extension.</li>
+            <li><code>RunWeb</code> is not guaranteed to survive Kimi web UI changes without maintenance.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. Roles</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Main Entry</th>
+            <th>Typical Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>End user</td>
+            <td>Cline prompt + VS Code task</td>
+            <td>Open the current file and run the VS Code task <code>Static Code Review Current File</code> as the supported execution path.</td>
+          </tr>
+          <tr>
+            <td>Project integrator</td>
+            <td><code>.clinerules</code>, <code>.vscode/tasks.json</code>, README</td>
+            <td>Copy the bundle into the project and expose a standard team workflow.</td>
+          </tr>
+          <tr>
+            <td>Maintainer</td>
+            <td><code>tools/kimi_review_pipeline.py</code></td>
+            <td>Maintain import, validation, gate, web automation, and output contract.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>3. Architecture</h2>
+      <div class="grid grid-spaced">
+        <div class="card">
+          <h3>User View</h3>
+          <p>The user only opens the current file and triggers <code>Static Code Review Current File.</code>. The remaining steps are automated by default.</p>
+        </div>
+        <div class="card">
+          <h3>System View</h3>
+          <p>The system runs rule checks, AI behavior-impact reasoning, result fusion, and formal report generation in sequence.</p>
+        </div>
+        <div class="card">
+          <h3>Engineering Assurance View</h3>
+          <p>The script chain enforces output contracts, structural validation, regression checks, and troubleshooting paths so results stay operational and traceable.</p>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>Interaction Layer</h3>
+          <p>Cline prompts and VS Code tasks are optimized for end users and provide the standard workflow entry.</p>
+        </div>
+        <div class="card">
+          <h3>Workflow Layer</h3>
+          <p><code>tools/kimi_review.ps1</code> dispatches the main actions such as <code>RunWeb</code>, <code>Validate</code>, and <code>Gate</code>.</p>
+        </div>
+        <div class="card">
+          <h3>Execution Layer</h3>
+          <p><code>tools/kimi_review_pipeline.py</code> is the core engine for import, report generation, validation, metadata, and gating.</p>
+        </div>
+        <div class="card">
+          <h3>Knowledge Layer</h3>
+          <p>Rules and templates come from <code>skills/static-code-review-workflow</code> and are loaded through <code>.clinerules</code>.</p>
+        </div>
+      </div>
+      <div class="note">The preferred default path is a two-step user trigger with automated backend processing. The user opens the file and starts review; the system performs rule checks, AI reasoning, fusion, and report generation behind the scenes.</div>
+    </section>
+
+    <section>
+      <h2>4. Core Components</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Responsibility</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>.clinerules</code></td>
+            <td>Bind short prompts to the project review method</td>
+            <td>Supports current file, selected function, selection, and named function patterns.</td>
+          </tr>
+          <tr>
+            <td><code>.vscode/tasks.json</code></td>
+            <td>Expose one-click tasks</td>
+            <td>Includes the sequential <code>Static Code Review Current File</code> task.</td>
+          </tr>
+          <tr>
+            <td><code>tools/kimi_review.ps1</code></td>
+            <td>Single workflow entry point</td>
+            <td>Resolves project paths and forwards to the pipeline.</td>
+          </tr>
+          <tr>
+            <td><code>tools/kimi_review_pipeline.py</code></td>
+            <td>Core workflow engine</td>
+            <td>Handles bundle creation, import, validation, report writing, and gate logic.</td>
+          </tr>
+          <tr>
+            <td><code>review-reports/</code></td>
+            <td>Formal output location</td>
+            <td>Stores the formal HTML reports and archives previous formal outputs before each new write.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>5. Main Flows</h2>
+      <h3>5.1 Current file review</h3>
+      <ol>
+        <li>The user opens the current <code>.c</code> file.</li>
+        <li>The user says <code>Static Code Review Current File.</code></li>
+        <li>The system starts AI code review.</li>
+        <li>Rule Pass checks the code against the project guideline library and emits rule hits with concrete code locations.</li>
+        <li>AI Pass evaluates functional impact independently.</li>
+        <li>Fusion Pass merges both passes and finalizes severity. If Rule Pass hits a guideline with Review Severity <code>major</code> or <code>critical</code>, Fusion must not omit, merge, or downgrade that finding unless the code satisfies an explicit exception clause in the rule, and that exception is documented in the finding Reasoning.</li>
+        <li>The Markdown report must contain a Rule Coverage paragraph listing applied guideline categories, any triggered major/critical rules, and categories evaluated but not triggered.</li>
+        <li>The system generates formal HTML reports under <code>review-reports/</code> and archives the existing formal report files in that root first.</li>
+      </ol>
+
+      <h3>5.2 Function review</h3>
+      <ol>
+        <li>The user selects the function, or says <code>Static Code Review Function &lt;name&gt;.</code></li>
+        <li>Cline attempts to narrow the review scope to the selection or named function.</li>
+        <li>The downstream rule-check, AI reasoning, fusion, and report-generation flow stays the same.</li>
+      </ol>
+      <div class="warn">Selection-based review is the most reliable function-level path. Name-only review depends on editor context and model behavior.</div>
+
+      <h3>5.3 Simple 7-step flow</h3>
+      <ol>
+        <li>Open the current <code>.c</code> file.</li>
+        <li>Run the VS Code task <code>Static Code Review Current File</code>.</li>
+        <li>AI starts source-code review.</li>
+        <li>Rule pass checks guideline mappings and emits concrete rule hits.</li>
+        <li>AI pass evaluates functional impact independently.</li>
+        <li>Fusion pass merges both passes and finalizes severity; major/critical rule hits cannot be omitted or downgraded unless the code satisfies an explicit rule exception.</li>
+        <li>Generate Markdown report with a Rule Coverage paragraph.</li>
+        <li>Formal HTML reports are generated.</li>
+      </ol>
+      <div class="diagram-wrap">
+        <svg width="920" height="560" viewBox="0 0 920 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Simple 7-step flowchart">
+          <defs>
+            <marker id="arrow-en" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#5b6472" />
+            </marker>
+          </defs>
+
+          <rect x="20" y="20" width="180" height="500" rx="16" fill="#eaf2ff" stroke="#0f4c81"/>
+          <text x="110" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="#1f2937">User</text>
+
+          <rect x="220" y="20" width="680" height="500" rx="16" fill="#eef8ef" stroke="#17603a"/>
+          <text x="560" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="#1f2937">System automation</text>
+
+          <rect x="45" y="90" width="130" height="56" rx="10" fill="#dcecff" stroke="#0f4c81"/>
+          <text x="110" y="113" text-anchor="middle" font-size="13" fill="#1f2937">1. Open current</text>
+          <text x="110" y="131" text-anchor="middle" font-size="13" fill="#1f2937">.c file</text>
+
+          <rect x="45" y="190" width="130" height="56" rx="10" fill="#dcecff" stroke="#0f4c81"/>
+          <text x="110" y="213" text-anchor="middle" font-size="13" fill="#1f2937">2. Say command</text>
+          <text x="110" y="231" text-anchor="middle" font-size="11" fill="#1f2937">Static Code Review</text>
+
+          <line x1="110" y1="146" x2="110" y2="190" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow-en)"/>
+
+          <rect x="290" y="90" width="180" height="56" rx="10" fill="#e7f6ea" stroke="#17603a"/>
+          <text x="380" y="113" text-anchor="middle" font-size="13" fill="#1f2937">3. AI starts</text>
+          <text x="380" y="131" text-anchor="middle" font-size="13" fill="#1f2937">code review</text>
+
+          <rect x="520" y="90" width="150" height="56" rx="10" fill="#fff6df" stroke="#8a5a00"/>
+          <text x="595" y="122" text-anchor="middle" font-size="13" fill="#1f2937">4. Rule Pass</text>
+
+          <rect x="720" y="90" width="140" height="56" rx="10" fill="#fff6df" stroke="#8a5a00"/>
+          <text x="790" y="122" text-anchor="middle" font-size="13" fill="#1f2937">5. AI Pass</text>
+
+          <rect x="360" y="250" width="190" height="56" rx="10" fill="#e7f6ea" stroke="#17603a"/>
+          <text x="455" y="273" text-anchor="middle" font-size="13" fill="#1f2937">6. Fusion Pass</text>
+          <text x="455" y="291" text-anchor="middle" font-size="13" fill="#1f2937">Finalize severity</text>
+
+          <rect x="620" y="250" width="190" height="56" rx="10" fill="#e7f6ea" stroke="#17603a"/>
+          <text x="715" y="273" text-anchor="middle" font-size="13" fill="#1f2937">7. Generate formal</text>
+          <text x="715" y="291" text-anchor="middle" font-size="13" fill="#1f2937">Formal HTML</text>
+
+          <line x1="175" y1="218" x2="250" y2="218" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow-en)"/>
+          <line x1="380" y1="146" x2="380" y2="170" stroke="#5b6472" stroke-width="2"/>
+          <line x1="380" y1="170" x2="595" y2="170" stroke="#5b6472" stroke-width="2"/>
+          <line x1="595" y1="170" x2="595" y2="146" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow-en)"/>
+          <line x1="670" y1="118" x2="720" y2="118" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow-en)"/>
+          <line x1="790" y1="146" x2="790" y2="210" stroke="#5b6472" stroke-width="2"/>
+          <line x1="790" y1="210" x2="455" y2="210" stroke="#5b6472" stroke-width="2"/>
+          <line x1="455" y1="210" x2="455" y2="250" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow-en)"/>
+          <line x1="550" y1="278" x2="620" y2="278" stroke="#5b6472" stroke-width="2" marker-end="url(#arrow-en)"/>
+
+          <text x="460" y="370" text-anchor="middle" font-size="14" fill="#5b6472">Users only feel the first 2 steps. The remaining 5 steps are automated.</text>
+        </svg>
+      </div>
+    </section>
+
+    <section>
+      <h2>6. Output Contract</h2>
+      <ul>
+        <li>The Kimi response must contain <code>Markdown Report</code> followed by a <code>```md</code> fenced block.</li>
+        <li>The same response must contain <code>HTML Report</code> followed by a <code>```html</code> fenced block.</li>
+        <li>The Markdown report must contain the fixed section headings expected by the validator.</li>
+        <li>The HTML report must be a complete document and contain the expected section titles.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>7. Failure Model</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Import Failure</h3>
+          <p>Usually caused by missing fenced blocks or malformed Markdown/HTML sections.</p>
+        </div>
+        <div class="card">
+          <h3>Validate Failure</h3>
+          <p>Means the formal report is missing, empty, or structurally invalid.</p>
+        </div>
+        <div class="card">
+          <h3>Gate Failure</h3>
+          <p>Can indicate either report structure problems or that the source file is newer than the report.</p>
+        </div>
+        <div class="card">
+          <h3>RunWeb Failure</h3>
+          <p>Most often related to Kimi web UI changes, login state, or upload selector changes.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>8. Rollout Recommendations</h2>
+      <ul>
+        <li>Use current-file review with `RunWeb` automation as the default path, and treat validation plus gate as the standard regression check.</li>
+        <li>Standardize on the prompt <code>Static Code Review Current File.</code> and the task <code>Static Code Review Current File</code>.</li>
+        <li>Treat gate as an operational quality check, not as a final judge of finding truth.</li>
+        <li>Regression-test the <code>Import -> Validate -> Gate</code> chain whenever the bundle changes.</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>
+

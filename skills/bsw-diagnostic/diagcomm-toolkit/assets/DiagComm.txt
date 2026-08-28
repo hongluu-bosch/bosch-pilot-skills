@@ -1,0 +1,23 @@
+Product Type: DPB/ESP/IPB/RBU
+CAN Channel
+CAN Baudrate
+CANFD Baudrate
+CAN ID Format: 11/29 bit
+Addressing method: Normal/Normal Fixed/Extended
+CAN DLC: rx_frame_type/tx_frame_type (ClassicCAN|CANFD) + rx_dl/tx_dl (8|64)
+CAN Functional Request ID
+CAN Physical Request ID
+CAN Response ID
+N_As
+N_Ar
+N_Bs
+N_Br
+N_Cs
+N_Cr
+P2 Max
+P2* Max
+BS
+STmin
+PaddingByte
+StrictDlcCheck
+NRC78 Times

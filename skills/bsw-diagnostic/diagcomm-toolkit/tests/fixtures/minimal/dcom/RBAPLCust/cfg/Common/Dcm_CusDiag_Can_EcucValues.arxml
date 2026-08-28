@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Placeholder Dcm_CusDiag_Can_EcucValues.arxml for diagcomm-toolkit tests.
+  The pipeline validates this file exists but currently does not touch
+  any nodes inside it (PARAM_MAP references dcm_services_common and
+  dcm_feature_file instead). Keep the shell minimal so we don't pay a
+  parse cost we don't need.
+-->
+<AUTOSAR xmlns="http://autosar.org/schema/r4.0">
+  <AR-PACKAGES>
+    <AR-PACKAGE>
+      <SHORT-NAME>Dcm_CusDiag_Can</SHORT-NAME>
+      <ELEMENTS/>
+    </AR-PACKAGE>
+  </AR-PACKAGES>
+</AUTOSAR>

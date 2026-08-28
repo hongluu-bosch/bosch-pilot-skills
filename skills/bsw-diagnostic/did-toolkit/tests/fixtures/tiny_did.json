@@ -1,0 +1,187 @@
+[
+  {
+    "did_hex": "0xF190",
+    "did_name_en": "BaselineCounter",
+    "did_name_zh": "基线计数器",
+    "cvt": "U",
+    "supported_by_ecu": "Y",
+    "rw_state": "R",
+    "size_bytes": "1",
+    "data_type": "Unsigned",
+    "storage_pos": "EEPROM",
+    "access": {
+      "service_22": {
+        "application": {"default": "Y", "programming": "N", "extended": "Y"},
+        "boot": {"default": "N", "programming": "N", "extended": "N"},
+        "security": {"level0": "Y", "level1": "Y", "level_fbl": "N"}
+      },
+      "service_2e": {
+        "application": {"default": "N", "programming": "N", "extended": "N"},
+        "boot": {"default": "N", "programming": "N", "extended": "N"},
+        "security": {"level0": "N", "level1": "N", "level_fbl": "N"}
+      }
+    },
+    "sub_fields": [
+      {
+        "byte": "0",
+        "bit": "All",
+        "name_en": "counter value",
+        "name_zh": "计数值",
+        "range_min_phy": "0",
+        "range_max_phy": "255",
+        "unit": "",
+        "method_en": "",
+        "method_zh": "",
+        "default_value_phy": "0"
+      }
+    ]
+  },
+  {
+    "did_hex": "0xF18C",
+    "did_name_en": "ModeSelector",
+    "did_name_zh": "模式选择",
+    "cvt": "U",
+    "supported_by_ecu": "Y",
+    "rw_state": "RW",
+    "size_bytes": "1",
+    "data_type": "enum",
+    "storage_pos": "EEPROM",
+    "access": {
+      "service_22": {
+        "application": {"default": "Y", "programming": "N", "extended": "Y"},
+        "boot": {"default": "N", "programming": "N", "extended": "N"},
+        "security": {"level0": "Y", "level1": "Y", "level_fbl": "N"}
+      },
+      "service_2e": {
+        "application": {"default": "N", "programming": "N", "extended": "Y"},
+        "boot": {"default": "N", "programming": "N", "extended": "N"},
+        "security": {"level0": "N", "level1": "Y", "level_fbl": "N"}
+      }
+    },
+    "sub_fields": [
+      {
+        "byte": "0",
+        "bit": "All",
+        "name_en": "mode code",
+        "name_zh": "模式码",
+        "range_min_phy": "0x00",
+        "range_max_phy": "0x02",
+        "unit": "",
+        "method_en": "0x00=Normal\n0x01=Sport\n0x02=Eco",
+        "method_zh": "0x00=标准\n0x01=运动\n0x02=经济",
+        "default_value_phy": "0x00"
+      }
+    ]
+  },
+  {
+    "did_hex": "0xF1A0",
+    "did_name_en": "LiveTemperature",
+    "did_name_zh": "实时温度",
+    "cvt": "U",
+    "supported_by_ecu": "Y",
+    "rw_state": "R",
+    "size_bytes": "1",
+    "data_type": "Unsigned",
+    "storage_pos": "RAM",
+    "access": {
+      "service_22": {
+        "application": {"default": "Y", "programming": "N", "extended": "Y"},
+        "boot": {"default": "N", "programming": "N", "extended": "N"},
+        "security": {"level0": "Y", "level1": "Y", "level_fbl": "N"}
+      },
+      "service_2e": {
+        "application": {"default": "N", "programming": "N", "extended": "N"},
+        "boot": {"default": "N", "programming": "N", "extended": "N"},
+        "security": {"level0": "N", "level1": "N", "level_fbl": "N"}
+      }
+    },
+    "sub_fields": [
+      {
+        "byte": "0",
+        "bit": "All",
+        "name_en": "temperature",
+        "name_zh": "温度",
+        "range_min_phy": "0",
+        "range_max_phy": "100",
+        "unit": "C",
+        "method_en": "",
+        "method_zh": "",
+        "default_value_phy": "0"
+      }
+    ]
+  },
+  {
+    "did_hex": "0xF1A1",
+    "did_name_en": "CalibrationConstant",
+    "did_name_zh": "标定常数",
+    "cvt": "U",
+    "supported_by_ecu": "Y",
+    "rw_state": "RW",
+    "size_bytes": "1",
+    "data_type": "Unsigned",
+    "storage_pos": "EEPROM",
+    "access": {
+      "service_22": {
+        "application": {"default": "Y", "programming": "N", "extended": "Y"},
+        "boot": {"default": "N", "programming": "N", "extended": "N"},
+        "security": {"level0": "Y", "level1": "Y", "level_fbl": "N"}
+      },
+      "service_2e": {
+        "application": {"default": "N", "programming": "N", "extended": "Y"},
+        "boot": {"default": "N", "programming": "N", "extended": "N"},
+        "security": {"level0": "N", "level1": "Y", "level_fbl": "N"}
+      }
+    },
+    "sub_fields": [
+      {
+        "byte": "0",
+        "bit": "All",
+        "name_en": "constant",
+        "name_zh": "常数",
+        "range_min_phy": "5",
+        "range_max_phy": "5",
+        "unit": "",
+        "method_en": "",
+        "method_zh": "",
+        "default_value_phy": "5"
+      }
+    ]
+  },
+  {
+    "did_hex": "0xF1A2",
+    "did_name_en": "RegionCode",
+    "did_name_zh": "区域码",
+    "cvt": "U",
+    "supported_by_ecu": "Y",
+    "rw_state": "R",
+    "size_bytes": "2",
+    "data_type": "enum",
+    "storage_pos": "EEPROM",
+    "access": {
+      "service_22": {
+        "application": {"default": "Y", "programming": "N", "extended": "Y"},
+        "boot": {"default": "N", "programming": "N", "extended": "N"},
+        "security": {"level0": "Y", "level1": "Y", "level_fbl": "N"}
+      },
+      "service_2e": {
+        "application": {"default": "N", "programming": "N", "extended": "N"},
+        "boot": {"default": "N", "programming": "N", "extended": "N"},
+        "security": {"level0": "N", "level1": "N", "level_fbl": "N"}
+      }
+    },
+    "sub_fields": [
+      {
+        "byte": "0-1",
+        "bit": "All",
+        "name_en": "region",
+        "name_zh": "区域",
+        "range_min_phy": "0x00",
+        "range_max_phy": "0x03",
+        "unit": "",
+        "method_en": "0x00=CN\n0x01=EU\n0x02=US\n0x03=Other",
+        "method_zh": "0x00=中国\n0x01=欧洲\n0x02=美国\n0x03=其他",
+        "default_value_phy": "0x00"
+      }
+    ]
+  }
+]

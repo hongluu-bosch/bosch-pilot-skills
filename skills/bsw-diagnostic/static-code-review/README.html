@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>static-code-review 使用入口</title>
+  <style>
+    :root {
+      --bg: #eef4f8;
+      --panel: #ffffff;
+      --text: #163047;
+      --muted: #5f6f7e;
+      --line: #d9e3ea;
+      --accent: #0c5a78;
+      --accent-2: #2f8db4;
+      --soft: #edf7fb;
+      --soft-2: #eef5ff;
+      --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(47, 141, 180, 0.14), transparent 28%),
+        linear-gradient(180deg, #f4f8fb 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 56px;
+    }
+    .hero,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    .hero {
+      padding: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #ffffff;
+    }
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.15;
+    }
+    .hero p {
+      margin: 0;
+      line-height: 1.65;
+    }
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.92;
+    }
+    .hero-list {
+      margin: 12px 0 0 18px;
+      padding: 0;
+    }
+    .panel {
+      padding: 22px 24px;
+    }
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      color: var(--accent);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      display: block;
+      text-decoration: none;
+      color: var(--text);
+      background: #fbfdfe;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+      border-color: #9fc0cf;
+    }
+    .tag {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--soft);
+      color: var(--accent);
+    }
+    .tag.blue {
+      background: var(--soft-2);
+    }
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 19px;
+      color: #173a5e;
+    }
+    .card p {
+      margin: 0;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    .note {
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #f8fbfd;
+      color: var(--text);
+    }
+    .note p {
+      margin: 0;
+      line-height: 1.6;
+    }
+    .task {
+      display: inline-block;
+      margin: 6px 8px 0 0;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #edf4fa;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .note-text {
+      margin-top: 12px;
+      color: var(--muted);
+    }
+    a {
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="eyebrow">Quick Start</div>
+      <h1>static-code-review 使用入口</h1>
+      <p>这个页面只保留使用者最常需要的文档入口。目标很简单：让执行 review 的工程师快速找到该点开的文件，而不是先看到整套实现细节。</p>
+      <ul class="hero-list">
+        <li>第一次使用：先看中文使用文档。</li>
+        <li>想了解整体结构：打开文档中心。</li>
+        <li>只有在需要维护流程时，再进入开发者入口。</li>
+      </ul>
+    </header>
+
+    <section class="panel">
+      <h2>使用者入口</h2>
+      <div class="grid">
+        <a class="card" href="docs/USAGE.zh-CN.html">
+          <span class="tag">中文使用</span>
+          <h3>使用文档</h3>
+          <p>最适合实际执行 review 的工程师，直接告诉你最少需要做哪几步。</p>
+        </a>
+        <a class="card" href="docs/index.html">
+          <span class="tag">中文首页</span>
+          <h3>文档中心</h3>
+          <p>如果你想快速浏览整套方案的文档结构，从这里进入最合适。</p>
+        </a>
+        <a class="card" href="docs/USAGE.en.html">
+          <span class="tag blue">English</span>
+          <h3>English Usage Guide</h3>
+          <p>Best for engineers who actually run reviews and need the minimum required steps.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>开发者入口</h2>
+      <div class="note">
+        <p><strong>只有在你要维护或排查这套流程时，再从这里进入：</strong></p>
+        <span class="task">docs/DESIGN.zh-CN.html</span>
+        <span class="task">docs/KIMI_REVIEW_ENGINEERING_GUIDE.zh-CN.md</span>
+        <span class="task">docs/DELIVERY.zh-CN.md</span>
+        <span class="task">docs/ROLLOUT_MESSAGE.zh-CN.md</span>
+        <p class="note-text">从使用者角度，前面的入口已经够用。这里保留的是维护者和集成者需要的更深入口。</p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,284 @@
+"""
+One-shot ``*.xlsx`` → ``*_did.json`` extractor — agent contract.
+
+Phase 1 of the did-toolkit only consumes schema-compliant
+``.DCOM_AI/DID_Toolkit_PRJ/inputs/<customer>_did.json``. The skill ships no built-in
+workbook parser, so every customer-supplied workbook
+(``.xlsx`` / ``.xlsm``) needs a one-off extractor that writes the
+canonical JSON.
+
+This file is a **template**, not an importable module. The toolkit
+scaffolds it into ``.DCOM_AI/DID_Toolkit_PRJ/scripts/extract_customer.py.template``
+during ``--init-project`` so each project gets a fresh starting
+point. The intended flow is:
+
+1. Copy this file to ``extract_<customer>.py`` (or some workbook-
+   specific name) next to the template.
+2. Inspect the actual workbook with ``openpyxl`` (or ``pandas``) and
+   replace the column-mapping stubs below to match the real header
+   labels.
+3. Run the extractor; it writes ``.DCOM_AI/DID_Toolkit_PRJ/inputs/<customer>_did.json``.
+4. Run ``python <skill>/scripts/pipeline.py --phase fscs``.
+
+Do NOT vendor the extractor back into the skill itself — per-customer
+parsing lives in the project workspace, not in the shared toolkit, so
+the skill stays generic.
+
+The canonical schema this file MUST emit is documented in
+``reference/input-format.md`` (and reproduced below as the
+``DIDRecord`` TypedDict so a static checker can keep you honest).
+
+Run:
+
+    python .DCOM_AI/DID_Toolkit_PRJ/scripts/extract_<customer>.py \\
+        --workbook .DCOM_AI/DID_Toolkit_PRJ/inputs/<customer-supplied>.xlsx \\
+        --output   .DCOM_AI/DID_Toolkit_PRJ/inputs/<customer>_did.json
+
+The script is intentionally self-contained — no imports from the
+did-toolkit skill — so the workspace remains portable across skill
+upgrades.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from typing import Any, Iterable, TypedDict
+
+try:
+    import openpyxl
+except ImportError:  # pragma: no cover - operator hint, not runtime path
+    print(
+        "[error] openpyxl is required. Install with:\n"
+        "        python -m pip install openpyxl",
+        file=sys.stderr,
+    )
+    raise
+
+
+# ---------------------------------------------------------------------------
+# Canonical schema — see reference/input-format.md for the full spec.
+# ---------------------------------------------------------------------------
+
+
+class _ServiceAccess(TypedDict, total=False):
+    application: dict[str, str]   # {"default": "Y/N", "extended": "Y/N", ...}
+    boot:        dict[str, str]   # {"default": "Y/N", "programming": "Y/N", ...}
+    security:    dict[str, str]   # {"level0": "Y/N", "level1": "Y/N", ...}
+
+
+class _Access(TypedDict, total=False):
+    service_22: _ServiceAccess
+    service_2e: _ServiceAccess
+
+
+class _SubField(TypedDict, total=False):
+    byte:              str
+    bit:               str
+    name_en:           str
+    name_zh:           str
+    range_min_phy:     str
+    range_max_phy:     str
+    unit:              str
+    method_en:         str
+    method_zh:         str
+    default_value_phy: str
+
+
+class DIDRecord(TypedDict, total=False):
+    did_hex:          str   # "0x0101" — uppercase, "0x" prefix preserved
+    did_name_en:      str   # spaces allowed
+    did_name_zh:      str   # optional
+    cvt:              str   # "U" / "C" / "T"
+    supported_by_ecu: str   # "Y" / "N"
+    rw_state:         str   # "R" / "W" / "RW"
+    size_bytes:       str   # decimal string, e.g. "16"
+    data_type:        str   # "enum" / "numeric" / "string" / "raw"
+    storage_pos:      str   # "EEPROM" / "RAM" / "ROM" (NVM/Flash auto-canonicalised)
+    access:           _Access
+    sub_fields:       list[_SubField]
+
+
+# ---------------------------------------------------------------------------
+# Workbook adapter — REPLACE the stubs to match the real questionnaire.
+# ---------------------------------------------------------------------------
+#
+# Inspecting the workbook (the first thing you should do):
+#
+#   import openpyxl
+#   wb = openpyxl.load_workbook(
+#       ".DCOM_AI/DID_Toolkit_PRJ/inputs/<customer-supplied>.xlsx",
+#       data_only=True, read_only=True,
+#   )
+#   print(wb.sheetnames)
+#   for name in wb.sheetnames:
+#       ws = wb[name]
+#       print(name, ws.max_row, ws.max_column)
+#       for row in ws.iter_rows(min_row=1, max_row=10, values_only=True):
+#           print(row)
+#
+# Identify:
+#   - Which sheet(s) carry DID rows (skip cover pages, change logs).
+#   - The header row(s); some templates use 2-3 row composite headers.
+#   - How service support is encoded (R/W column, separate sheets, ...).
+#   - How sub-fields are laid out (own rows under the DID, separate sheet, ...).
+#
+# Once the layout is clear, replace ``_extract_records`` with real logic.
+# Everything else in this template — CLI plumbing, schema validation,
+# JSON writer — is generic and you should leave it alone.
+
+
+def _extract_records(workbook_path: Path) -> list[DIDRecord]:
+    """Read ``workbook_path`` and return the canonical DID list.
+
+    REPLACE THIS BODY. The example below is a no-op stub that
+    returns a single placeholder so you can confirm the harness
+    runs end-to-end before you commit to the real mapping.
+    """
+
+    # Step 1 — open the workbook (data_only flips formulas to their
+    # cached values; read_only is faster for one-shot extraction).
+    wb = openpyxl.load_workbook(
+        workbook_path, data_only=True, read_only=True,
+    )
+
+    # Step 2 — figure out which sheet(s) actually carry DID rows.
+    # Replace this list once you've inspected the workbook.
+    candidate_sheets = [
+        name for name in wb.sheetnames
+        if name.lower() not in {"cover", "change log", "history"}
+    ]
+
+    # Step 3 — iterate the rows and emit DIDRecord dicts. The stub
+    # below produces ONE record so you can verify the writer end-to-end;
+    # delete it and emit real rows once the column-mapping is in place.
+    records: list[DIDRecord] = []
+    for sheet_name in candidate_sheets:
+        ws = wb[sheet_name]
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            # Example column layout (REPLACE):
+            #   row[0] = DID hex literal, e.g. "0x0101"
+            #   row[1] = English name
+            #   row[2] = Chinese name (optional)
+            #   row[3] = R / W / RW
+            #   row[4] = size in bytes
+            #   row[5] = data type
+            #   row[6] = storage position
+            if not row or not row[0]:
+                continue
+            # ... real per-row decoding goes here ...
+
+    # Stub fallback so the template runs end-to-end out of the box.
+    # Delete this once ``records`` is populated by the loop above.
+    if not records:
+        records.append(_example_record())
+    return records
+
+
+def _example_record() -> DIDRecord:
+    """Reference record so a fresh template still produces valid JSON."""
+    return {
+        "did_hex": "0x0101",
+        "did_name_en": "VariantCoding",
+        "did_name_zh": "车辆配置码",
+        "cvt": "U",
+        "supported_by_ecu": "Y",
+        "rw_state": "RW",
+        "size_bytes": "16",
+        "data_type": "enum",
+        "storage_pos": "EEPROM",
+        "access": {
+            "service_22": {
+                "application": {"default": "N", "extended": "Y"},
+                "security":    {"level0": "Y", "level1": "Y"},
+            },
+            "service_2e": {
+                "application": {"default": "N", "extended": "Y"},
+                "security":    {"level0": "N", "level1": "Y"},
+            },
+        },
+        "sub_fields": [],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Schema sanity check + writer (generic — DO NOT edit).
+# ---------------------------------------------------------------------------
+
+
+_REQUIRED_KEYS: tuple[str, ...] = (
+    "did_hex", "did_name_en", "size_bytes",
+)
+"""The trio Phase 1's Pydantic gate insists on. Everything else has
+sensible defaults downstream (``rw_state="R"``, ``data_type="raw"``,
+``storage_pos="RAM"``), but missing any of these three is a hard
+error at ``--phase fscs``. We re-check here so the failure surfaces
+during extraction instead of one CLI invocation later.
+"""
+
+
+def _validate(records: Iterable[DIDRecord]) -> list[str]:
+    """Return a list of human-readable errors (empty list = OK)."""
+    errors: list[str] = []
+    for idx, record in enumerate(records):
+        for key in _REQUIRED_KEYS:
+            if not record.get(key):
+                errors.append(
+                    f"  record #{idx}: missing required field {key!r}"
+                )
+        did_hex = record.get("did_hex", "")
+        if did_hex and not did_hex.lower().startswith("0x"):
+            errors.append(
+                f"  record #{idx}: did_hex={did_hex!r} must start with '0x'"
+            )
+    return errors
+
+
+def _write_json(records: list[DIDRecord], output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(records, f, ensure_ascii=False, indent=2)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "One-shot questionnaire extractor for did-toolkit v1.27.0+. "
+            "Reads a customer-supplied .xlsx / .xlsm and writes a "
+            "schema-compliant *_did.json that Phase 1 can consume."
+        ),
+    )
+    parser.add_argument(
+        "--workbook", required=True, type=Path,
+        help="Path to the customer questionnaire (.xlsx / .xlsm).",
+    )
+    parser.add_argument(
+        "--output", required=True, type=Path,
+        help="Destination *_did.json (typically .DCOM_AI/DID_Toolkit_PRJ/inputs/<customer>_did.json).",
+    )
+    args = parser.parse_args(argv)
+
+    if not args.workbook.is_file():
+        print(f"[error] workbook not found: {args.workbook}", file=sys.stderr)
+        return 2
+
+    records = _extract_records(args.workbook)
+    errors = _validate(records)
+    if errors:
+        print(
+            f"[error] {len(errors)} schema violation(s); JSON not written:",
+            file=sys.stderr,
+        )
+        for line in errors:
+            print(line, file=sys.stderr)
+        return 3
+
+    _write_json(records, args.output)
+    print(f"[ok] wrote {len(records)} DID record(s) to {args.output}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,247 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Static Code Review Setup",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/install_cline_integration.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Archive Current Reports",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/archive_review_reports.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Current File: Execute Web Review",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/kimi_review.ps1",
+        "-Action",
+        "RunWeb",
+        "-Source",
+        "${relativeFile}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Current File: Run Web Review",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Static Code Review Archive Current Reports",
+        "Static Code Review Current File: Execute Web Review"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Current File: Validate Report",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/kimi_review.ps1",
+        "-Action",
+        "Validate",
+        "-Source",
+        "${relativeFile}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Current File: Gate Report",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/kimi_review.ps1",
+        "-Action",
+        "Gate",
+        "-Source",
+        "${relativeFile}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Selected Function: Execute Web Review",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/kimi_review.ps1",
+        "-Action",
+        "RunWeb",
+        "-Source",
+        "${relativeFile}",
+        "-ScopeKind",
+        "function",
+        "-ScopeName",
+        "${selectedText}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Selected Function: Run Web Review",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Static Code Review Archive Current Reports",
+        "Static Code Review Selected Function: Execute Web Review"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Selected Function: Validate Report",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/kimi_review.ps1",
+        "-Action",
+        "Validate",
+        "-Source",
+        "${relativeFile}",
+        "-ScopeKind",
+        "function",
+        "-ScopeName",
+        "${selectedText}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Selected Function: Gate Report",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/kimi_review.ps1",
+        "-Action",
+        "Gate",
+        "-Source",
+        "${relativeFile}",
+        "-ScopeKind",
+        "function",
+        "-ScopeName",
+        "${selectedText}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Current File",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Static Code Review Current File: Run Web Review",
+        "Static Code Review Current File: Validate Report",
+        "Static Code Review Current File: Gate Report"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Static Code Review Selected Function",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Static Code Review Selected Function: Run Web Review",
+        "Static Code Review Selected Function: Validate Report",
+        "Static Code Review Selected Function: Gate Report"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

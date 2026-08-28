@@ -1,0 +1,362 @@
+{
+  "schema_version": "1.5",
+  "generated_at": "2026-04-20T12:00:00+00:00",
+  "generator": {
+    "tool": "did-toolkit/generate_fscs.py",
+    "source_inputs": "<tmp>/inputs/tiny_did.json"
+  },
+  "project": {
+    "customer_name": null
+  },
+  "dids": [
+    {
+      "did_hex": "F190",
+      "did_name": "BaselineCounter",
+      "did_name_zh": "基线计数器",
+      "data_type": "Unsigned",
+      "storage_position": "EEPROM",
+      "size_bytes": 1,
+      "rw_state": "R",
+      "nvm_item": "NVM_ID_DCOM_BaselineCounter",
+      "service_22": {
+        "supported": true,
+        "used": true,
+        "sessions": [
+          "defaultSession",
+          "extendedDiagnosticSession"
+        ],
+        "security_levels": [
+          {
+            "level": "L0",
+            "note": "(means no security access assurance)"
+          }
+        ],
+        "behavior": "Read from NVM item: NVM_ID_DCOM_BaselineCounter"
+      },
+      "service_2e": {
+        "supported": false,
+        "used": true,
+        "sessions": [],
+        "security_levels": [],
+        "behavior": ""
+      },
+      "sub_fields": [
+        {
+          "byte_idx": 0,
+          "byte_span": 1,
+          "bit": "All",
+          "name_en": "counter value",
+          "name_zh": "计数值",
+          "range_min": "0",
+          "range_max": "255",
+          "unit": "",
+          "resolution": null,
+          "offset": null,
+          "enum_mapping": null,
+          "default_value": "0",
+          "data_type": null,
+          "encoding": null
+        }
+      ],
+      "value_range": {
+        "kind": "numeric",
+        "min": "0",
+        "max": "255",
+        "unit": ""
+      },
+      "free_text": {
+        "description_read": null,
+        "description_write": null,
+        "request_block_22": null,
+        "response_block_22": null,
+        "request_block_2e": null,
+        "response_block_2e": null,
+        "custom_paragraphs": []
+      },
+      "product_type": null
+    },
+    {
+      "did_hex": "F18C",
+      "did_name": "ModeSelector",
+      "did_name_zh": "模式选择",
+      "data_type": "enum",
+      "storage_position": "EEPROM",
+      "size_bytes": 1,
+      "rw_state": "RW",
+      "nvm_item": "NVM_ID_DCOM_ModeSelector",
+      "service_22": {
+        "supported": true,
+        "used": true,
+        "sessions": [
+          "defaultSession",
+          "extendedDiagnosticSession"
+        ],
+        "security_levels": [
+          {
+            "level": "L0",
+            "note": "(means no security access assurance)"
+          }
+        ],
+        "behavior": "Read from NVM item: NVM_ID_DCOM_ModeSelector"
+      },
+      "service_2e": {
+        "supported": true,
+        "used": true,
+        "sessions": [
+          "extendedDiagnosticSession"
+        ],
+        "security_levels": [
+          {
+            "level": "L1",
+            "note": null
+          }
+        ],
+        "behavior": "Write to NVM item: NVM_ID_DCOM_ModeSelector"
+      },
+      "sub_fields": [
+        {
+          "byte_idx": 0,
+          "byte_span": 1,
+          "bit": "All",
+          "name_en": "mode code",
+          "name_zh": "模式码",
+          "range_min": "0x00",
+          "range_max": "0x02",
+          "unit": "",
+          "resolution": null,
+          "offset": null,
+          "enum_mapping": "0x00=Normal\n0x01=Sport\n0x02=Eco",
+          "default_value": "0x00",
+          "data_type": null,
+          "encoding": null
+        }
+      ],
+      "value_range": {
+        "kind": "enum",
+        "values": [
+          "0x00",
+          "0x01",
+          "0x02"
+        ]
+      },
+      "free_text": {
+        "description_read": null,
+        "description_write": null,
+        "request_block_22": null,
+        "response_block_22": null,
+        "request_block_2e": null,
+        "response_block_2e": null,
+        "custom_paragraphs": []
+      },
+      "product_type": null
+    },
+    {
+      "did_hex": "F1A0",
+      "did_name": "LiveTemperature",
+      "did_name_zh": "实时温度",
+      "data_type": "Unsigned",
+      "storage_position": "RAM",
+      "size_bytes": 1,
+      "rw_state": "R",
+      "nvm_item": "",
+      "service_22": {
+        "supported": true,
+        "used": true,
+        "sessions": [
+          "defaultSession",
+          "extendedDiagnosticSession"
+        ],
+        "security_levels": [
+          {
+            "level": "L0",
+            "note": "(means no security access assurance)"
+          }
+        ],
+        "behavior": "interface: "
+      },
+      "service_2e": {
+        "supported": false,
+        "used": true,
+        "sessions": [],
+        "security_levels": [],
+        "behavior": ""
+      },
+      "sub_fields": [
+        {
+          "byte_idx": 0,
+          "byte_span": 1,
+          "bit": "All",
+          "name_en": "temperature",
+          "name_zh": "温度",
+          "range_min": "0",
+          "range_max": "100",
+          "unit": "C",
+          "resolution": null,
+          "offset": null,
+          "enum_mapping": null,
+          "default_value": "0",
+          "data_type": null,
+          "encoding": null
+        }
+      ],
+      "value_range": {
+        "kind": "numeric",
+        "min": "0",
+        "max": "100",
+        "unit": "C"
+      },
+      "free_text": {
+        "description_read": null,
+        "description_write": null,
+        "request_block_22": null,
+        "response_block_22": null,
+        "request_block_2e": null,
+        "response_block_2e": null,
+        "custom_paragraphs": []
+      },
+      "product_type": null
+    },
+    {
+      "did_hex": "F1A1",
+      "did_name": "CalibrationConstant",
+      "did_name_zh": "标定常数",
+      "data_type": "Unsigned",
+      "storage_position": "EEPROM",
+      "size_bytes": 1,
+      "rw_state": "RW",
+      "nvm_item": "NVM_ID_DCOM_CalibrationConstant",
+      "service_22": {
+        "supported": true,
+        "used": true,
+        "sessions": [
+          "defaultSession",
+          "extendedDiagnosticSession"
+        ],
+        "security_levels": [
+          {
+            "level": "L0",
+            "note": "(means no security access assurance)"
+          }
+        ],
+        "behavior": "Read from NVM item: NVM_ID_DCOM_CalibrationConstant"
+      },
+      "service_2e": {
+        "supported": true,
+        "used": true,
+        "sessions": [
+          "extendedDiagnosticSession"
+        ],
+        "security_levels": [
+          {
+            "level": "L1",
+            "note": null
+          }
+        ],
+        "behavior": "Write to NVM item: NVM_ID_DCOM_CalibrationConstant"
+      },
+      "sub_fields": [
+        {
+          "byte_idx": 0,
+          "byte_span": 1,
+          "bit": "All",
+          "name_en": "constant",
+          "name_zh": "常数",
+          "range_min": "5",
+          "range_max": "5",
+          "unit": "",
+          "resolution": null,
+          "offset": null,
+          "enum_mapping": null,
+          "default_value": "5",
+          "data_type": null,
+          "encoding": null
+        }
+      ],
+      "value_range": {
+        "kind": "numeric",
+        "min": "5",
+        "max": "5",
+        "unit": ""
+      },
+      "free_text": {
+        "description_read": null,
+        "description_write": null,
+        "request_block_22": null,
+        "response_block_22": null,
+        "request_block_2e": null,
+        "response_block_2e": null,
+        "custom_paragraphs": []
+      },
+      "product_type": null
+    },
+    {
+      "did_hex": "F1A2",
+      "did_name": "RegionCode",
+      "did_name_zh": "区域码",
+      "data_type": "enum",
+      "storage_position": "EEPROM",
+      "size_bytes": 2,
+      "rw_state": "R",
+      "nvm_item": "NVM_ID_DCOM_RegionCode",
+      "service_22": {
+        "supported": true,
+        "used": true,
+        "sessions": [
+          "defaultSession",
+          "extendedDiagnosticSession"
+        ],
+        "security_levels": [
+          {
+            "level": "L0",
+            "note": "(means no security access assurance)"
+          }
+        ],
+        "behavior": "Read from NVM item: NVM_ID_DCOM_RegionCode"
+      },
+      "service_2e": {
+        "supported": false,
+        "used": true,
+        "sessions": [],
+        "security_levels": [],
+        "behavior": ""
+      },
+      "sub_fields": [
+        {
+          "byte_idx": 0,
+          "byte_span": 2,
+          "bit": "All",
+          "name_en": "region",
+          "name_zh": "区域",
+          "range_min": "0x00",
+          "range_max": "0x03",
+          "unit": "",
+          "resolution": null,
+          "offset": null,
+          "enum_mapping": "0x00=CN\n0x01=EU\n0x02=US\n0x03=Other",
+          "default_value": "0x00",
+          "data_type": null,
+          "encoding": null
+        }
+      ],
+      "value_range": {
+        "kind": "enum",
+        "values": [
+          "0x00",
+          "0x01",
+          "0x02",
+          "0x03"
+        ]
+      },
+      "free_text": {
+        "description_read": null,
+        "description_write": null,
+        "request_block_22": null,
+        "response_block_22": null,
+        "request_block_2e": null,
+        "response_block_2e": null,
+        "custom_paragraphs": []
+      },
+      "product_type": null
+    }
+  ]
+}

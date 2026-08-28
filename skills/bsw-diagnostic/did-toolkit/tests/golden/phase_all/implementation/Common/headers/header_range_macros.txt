@@ -1,0 +1,18 @@
+#define DID_F18C_VAL_0		0x00
+#define DID_F18C_VAL_1		0x01
+#define DID_F18C_VAL_2		0x02
+
+
+#define DID_F190_MIN		0
+#define DID_F190_MAX		255
+
+
+#define DID_F1A1_MIN		5
+#define DID_F1A1_MAX		5
+
+
+#define DID_F1A2_VAL_0		0x00
+#define DID_F1A2_VAL_1		0x01
+#define DID_F1A2_VAL_2		0x02
+#define DID_F1A2_VAL_3		0x03
+

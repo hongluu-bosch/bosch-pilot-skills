@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Static Code Review 使用文档</title>
+  <style>
+    :root {
+      --bg: #f5f7fc;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #5f6978;
+      --line: #d7deea;
+      --accent: #0b5cab;
+      --soft: #e8f1fd;
+      --ok: #1f6a3f;
+      --warn: #9a6a08;
+    }
+    body { margin: 0; font-family: "Segoe UI", Tahoma, sans-serif; background: linear-gradient(180deg, #eef3fb 0%, var(--bg) 100%); color: var(--text); line-height: 1.65; }
+    .page { max-width: 1080px; margin: 0 auto; padding: 32px 20px 56px; }
+    .hero, section, nav { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06); margin-bottom: 20px; }
+    .hero { padding: 28px; background: linear-gradient(135deg, #0b5cab, #2678c8); color: #ffffff; }
+    .hero h1 { margin: 0 0 10px; font-size: 32px; }
+    nav, section { padding: 22px 24px; }
+    h2 { margin-top: 0; color: var(--accent); }
+    h3 { color: #17436a; margin-bottom: 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .card { background: #fbfcfe; border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+    code { background: #eef4fb; padding: 2px 6px; border-radius: 6px; font-family: Consolas, monospace; }
+    pre { background: #132238; color: #eef5ff; padding: 16px; border-radius: 12px; overflow-x: auto; }
+    .step { border-left: 5px solid var(--accent); background: var(--soft); padding: 12px 14px; border-radius: 10px; }
+    .warn { border-left: 5px solid var(--warn); background: #fff6df; padding: 12px 14px; border-radius: 10px; }
+    .ok { border-left: 5px solid var(--ok); background: #ecf9f0; padding: 12px 14px; border-radius: 10px; }
+    .spaced { margin-top: 12px; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>Static Code Review 使用文档</h1>
+      <p>本文档面向最终用户，说明如何用最短提示词和最少操作完成当前文件或函数的 review，并自动生成标准报告。</p>
+    </header>
+
+    <nav>
+      <strong>文档导航</strong>
+      <p><a href="DESIGN.zh-CN.html">中文设计文档</a> | <a href="DESIGN.en.html">English Design</a> | <a href="USAGE.en.html">English Usage</a></p>
+    </nav>
+
+    <section>
+      <h2>1. 你只需要记住什么</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>提示词</h3>
+          <ul>
+            <li><code>Static Code Review Current File.</code></li>
+            <li><code>Static Code Review Selected Function.</code></li>
+            <li><code>Static Code Review Function <函数名>.</code></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>VS Code 任务</h3>
+          <ul>
+            <li><code>Static Code Review Setup</code></li>
+            <li><code>Static Code Review Current File</code></li>
+            <li><code>Static Code Review Selected Function</code></li>
+          </ul>
+        </div>
+      </div>
+      <div class="ok">对普通用户，默认推荐路径是：当前文件运行 <code>Static Code Review Current File</code>；函数级 review 先选中函数，再运行 <code>Static Code Review Selected Function</code>。这两条路径都比聊天触发更稳，不依赖 Cline 聊天侧的命令审批策略。</div>
+      <div class="ok spaced">三句话理解这个方案：用户只需要触发审查；系统自动执行规则检查、AI 判断、结果融合和报告生成；脚本链路负责校验、回归和问题定位。</div>
+      <div class="ok spaced">规则原理为双审融合：先做规则审查，再做 AI 独立审查，最后融合两轮结果并按功能影响确定严重级别。</div>
+    </section>
+
+    <section>
+      <h2>2. 第一次使用</h2>
+      <ol>
+        <li>把整个 <code>static-code-review</code> 文件夹复制到你的项目根目录。</li>
+        <li>打开 <code>static-code-review</code> 文件夹，双击运行 <code>review-install.cmd</code>。</li>
+        <li>执行后，项目根目录会自动安装这套 review 所需的项目配置（<code>.clinerules</code>、<code>.vscode/tasks.json</code>），并在本机初始化兼容 Cline 客户端的 auto approve 状态。</li>
+        <li>当前默认正式路径是 API review（依赖 <code>%USERPROFILE%/.static-code-review/config.json</code> 中的 <code>api.apiKey</code>），不依赖网页聊天登录态；只有在你明确切换到网页自动化维护路径时，才需要额外确认网页聊天服务登录状态。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>3. 审查当前打开的 .c 文件</h2>
+      <div class="step">
+        <strong>步骤</strong>
+        <ol>
+          <li>在 VS Code 中打开当前要审查的 <code>.c</code> 文件。</li>
+          <li>运行 VS Code 任务：<code>Static Code Review Current File</code></li>
+        </ol>
+      </div>
+      <p>完成后会通过网页自动化直接写正式报告到 <code>review-reports/</code>，不依赖你手工保存一个新建编辑器文件。这里的“当前文件”指当前活动的源码文件，不是已经生成出来的报告 HTML 标签页。</p>
+    </section>
+
+    <section>
+      <h2>4. 审查某个函数</h2>
+      <h3>推荐方式</h3>
+      <ol>
+        <li>先在编辑器中选中该函数。</li>
+        <li>运行 VS Code 任务：<code>Static Code Review Selected Function</code></li>
+      </ol>
+
+      <h3>简化方式</h3>
+      <ol>
+        <li>在当前文件打开状态下，直接输入：<code>Static Code Review Function <函数名>.</code></li>
+      </ol>
+
+      <div class="warn">如果你追求最稳的函数级范围控制，优先使用“先选中函数，再运行 <code>Static Code Review Selected Function</code> 任务”。</div>
+    </section>
+
+    <section>
+      <h2>5. 报告会生成到哪里</h2>
+      <ul>
+        <li><code>review-reports/static-code-review-report.current-file.<文件名或函数名>.<时间戳>.html</code></li>
+        <li><code>review-reports/static-code-review-report.current-file.<文件名或函数名>.<时间戳>.zh-CN.html</code></li>
+      </ul>
+      <p>文件名始终包含正式报告前缀 <code>static-code-review-report.current-file</code>，中间拼接实际审查的文件名或函数名，末尾为时间戳。具体评审范围仍会写在报告标题和头部元信息里。正式输出以 HTML 为主；如果工作区里已有旧的 Markdown 报告，也会在归档时一并移动。</p>
+      <div class="warn">无论是当前文件、单函数还是选中函数，只要写入新的正式报告，系统都会先把 <code>review-reports/</code> 根目录里现有的正式报告统一归档到 <code>archive/</code>。如果你想提前单独归档，也可以手动运行 <code>Static Code Review Archive Current Reports</code>。</div>
+    </section>
+
+    <section>
+      <h2>6. 常见问题</h2>
+      <ul>
+        <li>没有生成报告：先确认已经完成初始化，并且当前活动标签页是要审查的 <code>.c</code> 源码文件，而不是 <code>review-reports/</code> 下的 HTML 报告，然后重新运行 <code>Static Code Review Current File</code> 任务。</li>
+        <li>报告内容不完整：通常是导入的 Kimi 回复不完整，重新复制完整回复后再执行一次当前文件 review。</li>
+        <li>报告已经过期：常见原因是源文件在报告生成后又被修改，重新触发一次当前文件 review 即可。</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

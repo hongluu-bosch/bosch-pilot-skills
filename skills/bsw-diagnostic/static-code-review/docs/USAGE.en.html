@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Static Code Review Usage Guide</title>
+  <style>
+    :root {
+      --bg: #f5f7fc;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --line: #d7deea;
+      --accent: #0b5cab;
+      --soft: #e8f1fd;
+      --ok: #1f6a3f;
+      --warn: #9a6a08;
+    }
+    body { margin: 0; font-family: "Segoe UI", Tahoma, sans-serif; background: linear-gradient(180deg, #eef3fb 0%, var(--bg) 100%); color: var(--text); line-height: 1.65; }
+    .page { max-width: 1080px; margin: 0 auto; padding: 32px 20px 56px; }
+    .hero, section, nav { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06); margin-bottom: 20px; }
+    .hero { padding: 28px; background: linear-gradient(135deg, #0b5cab, #2678c8); color: #ffffff; }
+    .hero h1 { margin: 0 0 10px; font-size: 32px; }
+    nav, section { padding: 22px 24px; }
+    h2 { margin-top: 0; color: var(--accent); }
+    h3 { color: #17436a; margin-bottom: 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .card { background: #fbfcfe; border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+    code { background: #eef4fb; padding: 2px 6px; border-radius: 6px; font-family: Consolas, monospace; }
+    .step, .warn, .ok { padding: 12px 14px; border-radius: 10px; }
+    .step { border-left: 5px solid var(--accent); background: var(--soft); }
+    .warn { border-left: 5px solid var(--warn); background: #fff6df; }
+    .ok { border-left: 5px solid var(--ok); background: #ecf9f0; }
+    .spaced { margin-top: 12px; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>Static Code Review Usage Guide</h1>
+      <p>This guide is for end users. It explains the shortest prompt-based workflow to review the current file or a function and generate standard reports automatically.</p>
+    </header>
+
+    <nav>
+      <strong>Document Navigation</strong>
+      <p><a href="DESIGN.en.html">English Design</a> | <a href="DESIGN.zh-CN.html">中文设计文档</a> | <a href="USAGE.zh-CN.html">中文使用文档</a></p>
+    </nav>
+
+    <section>
+      <h2>1. What You Need to Remember</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Prompts</h3>
+          <ul>
+            <li><code>Static Code Review Current File.</code></li>
+            <li><code>Static Code Review Selected Function.</code></li>
+            <li><code>Static Code Review Function <function-name>.</code></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>VS Code Tasks</h3>
+          <ul>
+            <li><code>Static Code Review Setup</code></li>
+            <li><code>Static Code Review Current File</code></li>
+            <li><code>Static Code Review Selected Function</code></li>
+          </ul>
+        </div>
+      </div>
+      <div class="ok">For most users, the supported paths are: run <code>Static Code Review Current File</code> for file-level review, or select a function and run <code>Static Code Review Selected Function</code> for function-level review. Both paths are more reliable than chat-triggered execution because they do not depend on Cline chat-side command approval behavior.</div>
+      <div class="ok spaced">Understand this solution in three lines: the user only triggers review; the system runs rule checks, AI reasoning, result fusion, and report generation automatically; the script chain handles validation, regression, and troubleshooting.</div>
+      <div class="ok spaced">Rule principle is dual-pass fusion: run a rule-based pass first, run an independent AI behavior-impact pass second, then fuse both results to decide final severity.</div>
+    </section>
+
+    <section>
+      <h2>2. First-Time Setup</h2>
+      <ol>
+        <li>Copy the entire <code>static-code-review</code> folder into your project root.</li>
+        <li>Open the <code>static-code-review</code> folder and double-click <code>review-install.cmd</code>.</li>
+        <li>This installs the project configuration needed for the review workflow (<code>.clinerules</code>, <code>.vscode/tasks.json</code>), and bootstraps local auto-approve state for compatible Cline clients on that machine.</li>
+        <li>The default formal path is API review (depends on <code>api.apiKey</code> in <code>%USERPROFILE%/.static-code-review/config.json</code>). It does not depend on web chat login state. Only if you explicitly switch to the web automation path do you need to verify the web chat service login status.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>3. Review the Current .c File</h2>
+      <div class="step">
+        <strong>Steps</strong>
+        <ol>
+          <li>Open the target <code>.c</code> file in VS Code.</li>
+          <li>Run the VS Code task <code>Static Code Review Current File</code></li>
+        </ol>
+      </div>
+      <p>This writes formal reports directly under <code>review-reports/</code> without relying on manually saving a newly created editor tab. Here, "current file" means the active source file, not a generated report HTML tab.</p>
+    </section>
+
+    <section>
+      <h2>4. Review a Function</h2>
+      <h3>Recommended path</h3>
+      <ol>
+        <li>Select the function in the editor.</li>
+        <li>Run the VS Code task <code>Static Code Review Selected Function</code></li>
+      </ol>
+
+      <h3>Simplified path</h3>
+      <ol>
+        <li>With the file open, say <code>Static Code Review Function <function-name>.</code></li>
+      </ol>
+
+      <div class="warn">If you want the most reliable function-only scope, select the function first and then run <code>Static Code Review Selected Function</code>.</div>
+    </section>
+
+    <section>
+      <h2>5. Where Reports Are Written</h2>
+      <ul>
+        <li><code>review-reports/static-code-review-report.current-file.<file-or-function-name>.<timestamp>.html</code></li>
+        <li><code>review-reports/static-code-review-report.current-file.<file-or-function-name>.<timestamp>.zh-CN.html</code></li>
+      </ul>
+      <p>The file name always contains the formal report prefix <code>static-code-review-report.current-file</code>, the reviewed file or function name in the middle, and the timestamp at the end. The actual review scope still appears in the report title and metadata. Formal output is HTML-first; if older markdown reports are present in the workspace, they are archived together with the matching HTML files.</p>
+      <div class="warn">Whether you review the current file, a named function, or a selected function, writing a new formal report now archives all existing formal reports in the root of <code>review-reports/</code> into <code>archive/</code> first. If you want to archive reports separately, you can still run <code>Static Code Review Archive Current Reports</code> manually.</div>
+    </section>
+
+    <section>
+      <h2>6. Common Issues</h2>
+      <ul>
+        <li>No report was generated: make sure setup was completed, the active tab is the target <code>.c</code> source file rather than an HTML report under <code>review-reports/</code>, and then run <code>Static Code Review Current File</code> again.</li>
+        <li>The report content is incomplete: the imported Kimi reply was likely incomplete, so copy the full reply and run the current-file review again.</li>
+        <li>The report is outdated: if the source file changed after report generation, trigger the current-file review again.</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

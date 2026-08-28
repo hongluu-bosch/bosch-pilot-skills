@@ -1,0 +1,229 @@
+# diagcomm-toolkit -> DOORS upload mapping skeleton  (v6: Excel-driven inputs)
+#
+# This file is the *skill-bundled* DOORS column-mapping skeleton. It is
+# read-only from the user's perspective: the toolkit ships it under
+# `assets/` and merges it at runtime with the THREE user-editable fields
+# from `inputs/DiagComm.xlsx`'s "DOORS Upload" sheet:
+#
+#     doors.document_uuid   -- REQUIRED, the DOORS module UUID
+#     mode                  -- insert (default) | update
+#     upload.dry_run        -- TRUE | FALSE (default)
+#
+# The merge happens in `scripts/excel_loader.py::merge_doors_skeleton()`
+# and produces the same dict shape that 1.13.0 .. 1.19.x stored in
+# `inputs/doors_mapping.yaml`. Downstream consumers (build_doors_payload.py,
+# doors_sync.py) see no difference.
+#
+# What changed from 1.19.x's inputs/doors_mapping.yaml
+# ----------------------------------------------------
+# Three top-level keys were lifted into Excel because they are the only
+# parts a project actually customises:
+#   - doors.document_uuid   (project-specific)
+#   - mode                  (per-upload decision)
+#   - upload.dry_run        (per-upload safety flag)
+# Everything else here -- anchor, defaults, value_maps, columns,
+# template, strategy, updates -- is a Bosch CusDiag/DWA convention that
+# is identical across every diagcomm project; users never edit it.
+#
+# Schema reference: reference/doors_mapping_format.md
+# Excel conventions: reference/doors_excel_conventions.md
+
+# ============================================================================
+# 1) DOORS endpoint defaults
+# ============================================================================
+doors:
+  # `document_uuid` is injected from inputs/DiagComm.xlsx::DOORS Upload sheet.
+  export_format: "json"
+
+# ============================================================================
+# 2) Anchor -- where DiagComm rows attach in the DOORS module
+# ----------------------------------------------------------------------------
+# Looked up at run-time in outputs/doors_export.json. The default rule
+# (insert AFTER the row whose Object Heading equals
+# "CAN ID and Timing Requirements") is the project convention for DiagComm.
+# ============================================================================
+anchor:
+  # Primary: match the "Object Heading" text of the target row.
+  # On Bosch DWA exports the heading lives inside the
+  # `DescriptionOfRequirementRB` field as a short standalone string.
+  by_heading:        "CAN ID and Timing Requirements"
+  heading_field:     "DescriptionOfRequirementRB"
+
+  # Fallbacks (used in this order if the primary match fails):
+  # by_identifier:       "<DOC>_SWFS_<SECTION>_NNN"   # exact row identifier (shape varies per project)
+  # by_absolute_number:  400                           # row's DOORS AbsoluteNumber
+
+# ============================================================================
+# 3) Mode -- how rows land in DOORS
+# ----------------------------------------------------------------------------
+# `mode` itself is injected from inputs/DiagComm.xlsx::DOORS Upload sheet.
+# The block below documents what each value means; doors_sync.py decides
+# insert/update automatically based on state/doors_upload_state.json
+# unless the user passes --force-mode on the CLI.
+#
+#   insert  : (default) every data row carries the anchor's identifier in
+#             "Destination Object" (column B). DOORS lays the rows down
+#             sequentially after the anchor in the order they appear in
+#             the upload xlsx.
+#   update  : every data row carries an explicit AbsoluteNumber in column D
+#             (and leaves Destination Object blank), so DOORS overwrites
+#             that existing row in place.
+#
+# When the user wants `update`, the agent should ASK them which
+# AbsoluteNumber goes with each arxml, then either:
+#   (a) edit the `updates:` block below, or
+#   (b) pass them on the CLI: `--update-abs <arxml>=<n>` (one flag per arxml).
+# ============================================================================
+updates: {}
+# Example for `mode: update`:
+#   updates:
+#     CanTp_CusDiag_EcucValues.arxml:    405
+#     Can0_CusDiag_EcucValues_ESP.arxml: 410
+
+# ============================================================================
+# 4) Excel template & sheet layout
+# ============================================================================
+template:
+  path:        "assets/doors_template.xlsx"
+  sheet:       "CS Data"
+  header_row:  2          # 1-based row index of the column-name row
+  data_start:  3          # 1-based row index of the first data row
+  size_row:    1          # 1-based row index of the meta row that holds
+                          # sizeRow / sizeColumn (auto-refreshed)
+
+# ============================================================================
+# 5) Strategy -- how many rows to emit
+# ============================================================================
+#   single_row  -> emit a single aggregated data row (DEFAULT for DiagComm).
+#                  Rationale: Object Text is the FULL FSCS.txt, so per-arxml
+#                  rows would carry identical Object Text and only differ in
+#                  RB_Realizing_SWitem; cleaner to emit one row whose
+#                  RB_Realizing_SWitem lists all arxml (newline-separated).
+#   per_arxml   -> emit one data row per arxml that diagcomm-toolkit
+#                  actually modified in the last apply.
+strategy: single_row
+
+# ============================================================================
+# 6) Static defaults for RB_* columns
+# ----------------------------------------------------------------------------
+# Note: `RB_Product` is NOT here -- it is derived per-row from
+# `inputs/DiagComm.xlsx::Project & Parameters::project.product_type` via
+# `value_maps` below.  See `columns:` further down.
+# ============================================================================
+defaults:
+  isPicture:                 "no"
+  RB_RS_CP_Status:           "accepted"
+  RB_RS_MS_Status:           "accepted"
+  RB_Configuration:          "DCOM_ReferenceDiagnosis_CUST"
+  RB_Realizing_SWComponent:  "CUBAS"
+  RB_VerificationType:       "Inspection"
+  RB_VerificationCriteria:   "verification type is inspection, this collumn is not applicable"
+  RB_Analysis_Results:       "Result / Size Estimate / Risk"
+
+# ============================================================================
+# 6b) Value maps (used by `map:<map>:<inner>` sources in `columns:`)
+# ----------------------------------------------------------------------------
+# DiagComm `product_type` enum vs. DOORS `RB_Product` cell vocabulary
+# differ slightly. Most projects only need the four entries below; if a
+# new project introduces another product (e.g. BWA), add it here.
+#
+# Table (from probing the live DOORS module):
+#   DiagComm product_type   ->  DOORS RB_Product token
+#   DPB                     ->  "DPB"
+#   ESP                     ->  "ESP 10"
+#   IPB                     ->  "IPB 2.0"
+#   RBU                     ->  "RBU"
+# ============================================================================
+value_maps:
+  RB_Product:
+    DPB: "DPB"
+    ESP: "ESP 10"
+    IPB: "IPB 2.0"
+    RBU: "RBU"
+
+# ============================================================================
+# 7) Per-row column overrides (dynamic)
+# ----------------------------------------------------------------------------
+# `source` syntax:
+#   row.<key>             this row's per-arxml context, populated by
+#                         build_doors_payload.py:
+#                           row.arxml          - arxml basename
+#                           row.destination    - in insert mode, the anchor's
+#                                                AbsoluteNumber (numeric, no
+#                                                identifier prefix -- DOORS
+#                                                rejects the full identifier
+#                                                string)
+#                           row.absolute_no    - chosen AbsoluteNumber (update mode)
+#                           row.object_text    - mode-aware Object Text:
+#                                                  insert -> full FSCS.txt
+#                                                  update -> full FSCS.txt + delta block
+#                                                (this is what `Object Text` should
+#                                                bind to; do not re-bind to
+#                                                extras.fscs_full_text directly)
+#                           row.fscs_chunk     - FSCS subset: just the params
+#                                                changed in this arxml (rarely
+#                                                what you want; prefer
+#                                                row.object_text or
+#                                                extras.fscs_full_text)
+#                           row.diff_chunk     - the diff_report fragment
+#                           row.param_count    - distinct params changed
+#   extras.<key>          run-time literals:
+#                           extras.fscs_full_text       - the entire FSCS.txt verbatim
+#                           extras.fscs_delta_text      - just the delta block
+#                                                         (timestamp/project/product/
+#                                                          changed files & params)
+#                           extras.fscs_hybrid_text     - full + delta (DEPRECATED;
+#                                                         kept for backward compat;
+#                                                         do not bind new mappings)
+#                           extras.realizing_arxmls     - CURRENT run only: arxml
+#                                                         basenames derived from
+#                                                         DiagComm_config.json::paths
+#                                                         (rarely what you want;
+#                                                         prefer rb_realizing_value)
+#                           extras.rb_product_value     - cell-ready RB_Product
+#                                                         content. In update mode
+#                                                         this is the union of
+#                                                         state.covered_products and
+#                                                         the current product, each
+#                                                         translated via
+#                                                         value_maps.RB_Product, then
+#                                                         joined with newlines.
+#                                                         In insert mode it is just
+#                                                         the current product mapped.
+#                           extras.rb_realizing_value   - cell-ready
+#                                                         RB_Realizing_SWitem content.
+#                                                         Union of state.covered_arxml_paths
+#                                                         and current arxmls,
+#                                                         newline-joined.
+#                           extras.appended_block       - just the block appended
+#                                                         to Object Text on this run
+#                                                         (transparency / debug).
+#                           extras.change_kind          - first_insert |
+#                                                         params_and_pp_changed |
+#                                                         params_changed |
+#                                                         pp_only_changed |
+#                                                         fscs_only_changed | no_change
+#                           extras.project_name
+#                           extras.product_type
+#                           extras.generated_at
+#   literal:<text>        verbatim, with `extras.foo` / `row.foo` expanded inline
+#                         An empty value (`literal:`) writes a blank cell.
+#   map:<name>:<inner>    resolve <inner>, then translate via value_maps[<name>]
+#                         (single-value mapping only; for the cumulative
+#                         RB_Product cell use extras.rb_product_value instead.)
+# ============================================================================
+columns:
+  "Destination Object":   "row.destination"
+  "Absolute Number":      "row.absolute_no"
+  "Object Heading":       "literal:"
+  "Object Text":          "row.object_text"             # full FSCS (insert) | last + appended block (update)
+  "RB_Realizing_SWitem":  "extras.rb_realizing_value"   # union of state.covered_arxml_paths + current
+  "RB_Product":           "extras.rb_product_value"     # union of state.covered_products + current, mapped
+
+# ============================================================================
+# 8) Upload-time hints
+# ============================================================================
+# `upload.dry_run` is injected from inputs/DiagComm.xlsx::DOORS Upload sheet.
+upload:
+  # `target_module_uuid` defaults to doors.document_uuid above.
+  {}

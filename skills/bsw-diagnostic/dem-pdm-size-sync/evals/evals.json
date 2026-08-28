@@ -1,0 +1,23 @@
+{
+  "skill_name": "dem-pdm-size-sync",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "当前 freeze-frame 改完以后，某个具体 buildconfig 编译报 Dem_Cfg_AssertionChk.h 的 BlockLengthIsInvalid。请分析当前编译选项对应的 Dem_EvMemEventMemoryType 大小、当前命中的 Dem_PRJ.pdm 分支，以及 NVM_ID_EVMEM_LOC 是否需要从旧 size 切到新 size。只分析，不要修改。",
+      "expected_output": "The skill should resolve the active generated variant, compute the real Dem_EvMemEventMemoryType size, identify the active Dem_PRJ.pdm branch, compare current and target NVM_ID_EVMEM_LOC sizes, and produce a current-project-only recommendation without applying changes.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我已经确认当前项目应该更新 EVMEM 的 PDM size。请只对当前项目做最小修改：如果 pdmdb 里已有目标 size family 就直接切换 active Dem_PRJ.pdm 分支的 use dataitem；如果没有就追加新的 NVM_ID_EVMEM_LOC_<size>_0..9，再切换 active 分支。不要改其他分支，也不要改其他项目。",
+      "expected_output": "The skill should apply only the active-branch current-project change, reuse an existing target family if available, otherwise append a new pdmdb family and then update only the active Dem_PRJ.pdm branch.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "请检查当前 buildconfig 对应的 generated 文件是否已经和目标 PDM size 同步。我要看 Dem_Cfg_AssertionChk.h、RBPDM_gen_NvM_EcucValues.arxml、NvM_Cfg.h 是否都已经匹配，不需要你重新生成。",
+      "expected_output": "The skill should run verification against generated outputs only and clearly report whether the assertion header, ARXML block length, and NvM_Cfg.h match the computed target size.",
+      "files": []
+    }
+  ]
+}

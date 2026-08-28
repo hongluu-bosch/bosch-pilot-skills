@@ -1,0 +1,33 @@
+# Runtime dependencies for did-toolkit scripts.
+#
+# Required interpreter: Python 3.11 or 3.12 (any flavour — system,
+# venv, conda, uv, ...).
+#
+# Install with:
+#   python -m pip install -r scripts/requirements.txt
+#
+# If the host has a user-level Python-environment skill configured,
+# activate it first; otherwise just use whatever `python` resolves to
+# a 3.11/3.12 interpreter on PATH.
+#
+# Jinja2 is used by scripts/templating.py to render the impl/ and arxml/
+# templates (migrated away from f-strings in phase 6).
+#
+# pydantic v2 is used by scripts/implementation/models.py to validate
+# *_did.json input DID definitions.
+#
+# keyring (since 2.3.0) brokers the OS-native credential store
+# (Windows Credential Manager / macOS Keychain / Linux Secret Service)
+# so DOORS passwords for --phase doors don't have to live on the CLI,
+# in $env, or in any file. Optional in spirit -- doors_sync.py degrades
+# gracefully to the env-var / interactive-prompt path if it's missing
+# or `--no-keyring` is set -- but pinned here so a fresh install gets
+# the zero-prompt UX out of the box.
+
+Jinja2>=3.1,<4
+pydantic>=2.6,<3
+PyYAML
+xlsxwriter
+openpyxl>=3.1,<4
+requests
+keyring>=23,<26
