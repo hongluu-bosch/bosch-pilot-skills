@@ -15,6 +15,7 @@ class Document(HTMLParser):
         self.nodes=[]
         self.stack=[]
         self.embedded=[]
+        self.styles=[]
     def handle_starttag(self, tag, attrs):
         node={'tag':tag,'attrs':dict(attrs),'parents':list(self.stack)}
         self.nodes.append(node)
@@ -28,7 +29,9 @@ class Document(HTMLParser):
                 del self.stack[i:]
                 break
     def handle_data(self,data):
-        if self.stack and self.stack[-1]['tag'] in {'style','script'}:self.embedded.append(data)
+        if self.stack and self.stack[-1]['tag']=='style':
+            self.embedded.append(data);self.styles.append(data)
+        elif self.stack and self.stack[-1]['tag']=='script':self.embedded.append(data)
 
 def check(path):
     errors=[]
@@ -59,7 +62,8 @@ def check(path):
                 if a.get(attr) and not a[attr].startswith(('#','data:')):errors.append('non-embedded SVG resource')
         if tag in {'iframe','object','embed','base'}:errors.append(f'unsupported embedded document/base: {tag}')
     code='\n'.join(doc.embedded)+'\n'+'\n'.join(n['attrs'].get('style','') for n in doc.nodes)
-    for value in re.findall(r'url\(\s*[\'"]?([^\)\'\"]+)',code,re.I):
+    css='\n'.join(doc.styles)+'\n'+'\n'.join(n['attrs'].get('style','') for n in doc.nodes)
+    for value in re.findall(r'url\(\s*[\'"]?([^\)\'\"]+)',css,re.I):
         if not value.strip().startswith(('data:','#')):errors.append('non-embedded CSS resource')
     if re.search(r'@import\b|\bfetch\s*\(|XMLHttpRequest|WebSocket|EventSource|sendBeacon\s*\(|\bimport\s*\(',code):
         errors.append('runtime import/network API requires removal or manual redesign')
@@ -89,6 +93,12 @@ def check(path):
         if not ids or None in ids or len(ids)!=len(set(ids)):errors.append('chapter IDs missing or duplicated')
         elif links!=['#'+id for id in ids]:errors.append('TOC links must match chapter IDs in order')
         if 'aria-current' not in code or 'scroll' not in code:errors.append('missing scrollspy behavior')
+        if not any(n['attrs'].get('id')=='edit-toggle' for n in doc.nodes):errors.append('missing direct-edit mode control')
+        if not any(n['attrs'].get('id')=='save-copy' for n in doc.nodes):errors.append('missing edited-copy download control')
+        if not any('data-editable' in n['attrs'] for n in doc.nodes):errors.append('no text is marked as editable')
+        if 'contenteditable' not in code or 'URL.createObjectURL' not in code or 'plaintext-only' not in code:errors.append('missing inline editing or edited-copy export behavior')
+        for logo in logos:
+            if 'contenteditable' in logo['attrs']:errors.append('Bosch logo must remain outside editable content')
     else:errors.append('missing/unknown data-artifact-mode')
     return list(dict.fromkeys(errors))
 

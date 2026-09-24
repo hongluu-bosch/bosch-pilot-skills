@@ -107,3 +107,9 @@ For a VS Code webview, allow the deck to fit the available panel while maintaini
 Start from `templates/scroll-sidebar.html`. Use native document scrolling and a sticky left table of contents. Define stable chapter IDs and matching anchor links in reading order. Select the last chapter whose top crossed the reading line; select the final chapter at the document bottom. A passive scroll listener schedules at most one update per animation frame. Resize and hash changes also schedule updates. Keep one `aria-current="location"` and a visible border/weight cue.
 
 Leave anchor navigation native so hashes, keyboard activation, direct links, and history work. Never update history on passive scrolling. On mobile, place wrapping navigation above content. In print, remove the sidebar and show the separate logo header.
+
+## Inline editing in scroll-sidebar mode
+
+Keep the template's **Edit page** control. Mark only intended user text with `data-editable`; toggle `contenteditable` for those nodes, and visibly identify editable text on hover and focus. Never make the Bosch logo, section IDs, table-of-contents anchors, scrollspy state, or controls editable. Provide a **Done editing** control and a **Download HTML** download that preserves text edits in a self-contained HTML document while resetting the edit mode. A browser cannot overwrite its own local source file, so explain the download-and-replace workflow in the page. Keep this toolbar hidden in print.
+
+Place Edit page below Print / PDF in the bottom sidebar action area. Keep actions visible while the table of contents scrolls. Show brief status text only when editing or when changes are pending. Export controls must reflect actual changes; print must hide controls and editing outlines.
